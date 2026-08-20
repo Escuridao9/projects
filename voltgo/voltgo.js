@@ -3014,19 +3014,14 @@ function showMainMenu() {
 
 // ==================== REPORTS FUNCTIONS ====================
 
-function getCompletedCharges() {
-
-    return charges.filter(
-        charge =>
-            charge.status === "terminated" || charge.status === "invoiced"
-    );
+function getCompletedChargesByStatus(status) {
+    return charges.filter(charge => normalize(charge.status) === normalize(status));
 }
 
-function reportChargesByStation(stationCode) {
-
+function reportChargesByStation(stationCode, status) {
     stationCode = stationCode.toUpperCase();
 
-    const reportCharges = getCompletedCharges().filter(
+    const reportCharges = getCompletedChargesByStatus(status).filter(
         charge => charge.stationCode === stationCode
     );
 
@@ -3049,7 +3044,6 @@ function reportChargesByStation(stationCode) {
     );
 
     for (const charge of reportCharges) {
-
         console.log(`${charge.id} | ${charge.clientId} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`);
 
         totalEnergy += charge.energy;
@@ -3064,8 +3058,7 @@ function reportChargesByStation(stationCode) {
     console.log(`Total cost: ${totalCost.toFixed(2)} €`);
 }
 
-function reportChargesByClient(tif) {
-
+function reportChargesByClient(tif, status) {
     tif = normalizeTIF(tif);
 
     const client = clients.find(
@@ -3077,7 +3070,7 @@ function reportChargesByClient(tif) {
         return;
     }
 
-    const reportCharges = getCompletedCharges().filter(
+    const reportCharges = getCompletedChargesByStatus(status).filter(
         charge => charge.clientId === client.id
     );
 
@@ -3102,9 +3095,7 @@ function reportChargesByClient(tif) {
     );
 
     for (const charge of reportCharges) {
-
-        console.log(`${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
-        );
+        console.log(`${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`);
 
         totalEnergy += charge.energy;
         totalCost += charge.cost;
@@ -3124,7 +3115,6 @@ function reportChargesByClient(tif) {
 }
 
 function calculateAge(DOB) {
-
     const birthDate = new Date(DOB);
     const today = new Date();
 
@@ -3139,7 +3129,6 @@ function calculateAge(DOB) {
 }
 
 function reportClientCharges(tif) {
-
     tif = normalizeTIF(tif);
 
     const client = clients.find(
@@ -3163,7 +3152,6 @@ function reportClientCharges(tif) {
     let totalEnergy = 0;
 
     for (const charge of clientCharges) {
-
         totalEnergy += charge.energy;
     }
 
@@ -3184,7 +3172,6 @@ function reportClientCharges(tif) {
 // ==================== REPORTS MENU ====================
 
 function showReportsMenu() {
-
     let option;
 
     do {
@@ -3198,33 +3185,33 @@ function showReportsMenu() {
 
         switch (option) {
 
-            case "1":
-
+            case "1": {
                 const stationCode = input("Station code: ");
-                reportChargesByStation(stationCode);
-
+                const status = input("Status (terminated/invoiced): ");
+                reportChargesByStation(stationCode, status);
                 break;
+            }
 
-            case "2":
-
+            case "2": {
                 const clientTif = input("Client TIF: ");
-                reportChargesByClient(clientTif);
-
+                const status = input("Status (terminated/invoiced): ");
+                reportChargesByClient(clientTif, status);
                 break;
+            }
 
-            case "3":
+            case "3": {
                 const reportTif = input("Client TIF: ");
                 reportClientCharges(reportTif);
-
                 break;
+            }
 
             case "0":
                 break;
 
             default:
                 console.log("Invalid option.");
-
-
         }
     } while (option !== "0");
-}; 
+}
+
+showMainMenu()
