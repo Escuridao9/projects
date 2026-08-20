@@ -3017,6 +3017,205 @@ showMainMenu();
 
 
 
+// ==================== MAIN ====================
+
+function showMainMenu() {
+
+    showDashboard();
+
+    let option;
+
+    do {
+
+        console.log("\n==============================");
+        console.log("       VOLTGO MANAGEMENT");
+        console.log("==============================");
+
+        console.log("1. Stations");
+        console.log("2. Clients");
+        console.log("3. Data Plans");
+        console.log("4. Charges");
+        console.log("5. Reports");
+        console.log("0. Exit");
+
+        option = input("Choose an option: ");
+
+        switch (option) {
+
+            case "1":
+
+                showStationsMenu();
+                break;
+
+
+            case "2":
+
+                showClientsMenu();
+                break;
+
+
+            case "3":
+
+                showDataPlansMenu();
+                break;
+
+
+            case "4":
+
+                showChargeMenu();
+                break;
+
+            case "5":
+
+                showReportsMenu();
+                break;
+
+
+            case "0":
+
+                console.log("Exiting VoltGo...");
+                break;
+
+
+            default:
+
+                console.log("Invalid option.");
+        }
+
+    } while (option !== "0");
+}
+
+// ==================== DASHBOARD ====================
+
+function countChargesByStatus(status) {
+
+    return charges.filter(
+        charge => charge.status === status
+    ).length;
+
+}
+
+
+function showChargesByStation() {
+
+    const terminatedCharges =
+        charges.filter(
+            charge => charge.status === "terminated"
+        );
+
+    console.log(
+        "\nTerminated charges by station"
+    );
+
+    console.log(
+        "--------------------------------------"
+    );
+
+    console.log(
+        "Station | Charges | Average Energy"
+    );
+
+    for (const station of stations) {
+
+        const stationCharges =
+            terminatedCharges.filter(
+                charge => charge.stationCode === station.code
+            );
+
+        if (stationCharges.length === 0) {
+            continue;
+        }
+
+        const totalEnergy =
+            stationCharges.reduce(
+                (total, charge) => total + charge.energy,
+                0
+            );
+
+        const averageEnergy =
+            totalEnergy / stationCharges.length;
+
+        console.log(
+            `${station.code} | ${stationCharges.length} | ${averageEnergy.toFixed(2)} kWh`
+        );
+    }
+}
+
+
+function showRevenueByDataPlan() {
+
+    const invoicedCharges =
+        charges.filter(
+            charge => charge.status === "invoiced"
+        );
+
+    console.log(
+        "\nInvoiced charges by data plan"
+    );
+
+    console.log(
+        "--------------------------------------"
+    );
+
+    console.log(
+        "Plan | Charges | Average Revenue"
+    );
+
+    for (const dataPlan of dataPlans) {
+
+        const planCharges =
+            invoicedCharges.filter(
+                charge => charge.dataPlanId === dataPlan.id
+            );
+
+        if (planCharges.length === 0) {
+            continue;
+        }
+
+        const totalRevenue =
+            planCharges.reduce(
+                (total, charge) => total + charge.cost,
+                0
+            );
+
+        const averageRevenue =
+            totalRevenue / planCharges.length;
+
+        console.log(
+            `${dataPlan.name} | ${planCharges.length} | ${averageRevenue.toFixed(2)} €`
+        );
+    }
+}
+
+function showDashboard() {
+
+    const inProcess =
+        countChargesByStatus("in process");
+
+    const terminated =
+        countChargesByStatus("terminated");
+
+    console.log(
+        "\n========== VOLTGO DASHBOARD =========="
+    );
+
+    console.log(
+        `\nCharges in process: ${inProcess}`
+    );
+
+    console.log(
+        `Charges terminated: ${terminated}`
+    );
+
+    showChargesByStation();
+
+    showRevenueByDataPlan();
+
+    console.log(
+        "\n======================================="
+    );
+}
+
 // ==================== REPORTS FUNCTIONS ====================
 
 function getCompletedCharges() {
@@ -3234,4 +3433,7 @@ function showReportsMenu() {
     } while (option !== "0");
 }; 
 
-gggggg
+showMainMenu()
+
+
+
