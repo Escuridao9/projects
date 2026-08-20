@@ -3214,4 +3214,4 @@ function showReportsMenu() {
     } while (option !== "0");
 }
 
-showMainMenu()
+showMainMenu();
