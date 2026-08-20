@@ -3009,3 +3009,229 @@ function showMainMenu() {
 
 
 showMainMenu();
+
+
+
+
+
+
+
+
+// ==================== REPORTS FUNCTIONS ====================
+
+function getCompletedCharges() {
+
+    return charges.filter(
+        charge =>
+            charge.status === "terminated" || charge.status === "invoiced"
+    );
+}
+
+function reportChargesByStation(stationCode) {
+
+    stationCode = stationCode.toUpperCase();
+
+    const reportCharges = getCompletedCharges().filter(
+        charge => charge.stationCode === stationCode
+    );
+
+    if (reportCharges.length === 0) {
+        console.log("No completed charges found for this station.");
+        return;
+    }
+
+    let totalEnergy = 0;
+    let totalCost = 0;
+
+    console.log("\n===== CHARGES REPORT BY STATION =====");
+    console.log(`Station: ${stationCode}`);
+    console.log(
+        "\nID | Client | Start | End | Energy | Cost"
+    );
+
+    console.log(
+        "---------------------------------------------------------------------"
+    );
+
+    for (const charge of reportCharges) {
+
+        console.log(`${charge.id} | ${charge.clientId} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`);
+
+        totalEnergy += charge.energy;
+        totalCost += charge.cost;
+    }
+
+    console.log(
+        "---------------------------------------------------------------------"
+    );
+
+    console.log(`Total energy: ${totalEnergy.toFixed(2)} kWh`);
+    console.log(`Total cost: ${totalCost.toFixed(2)} €`);
+}
+
+function reportChargesByClient(tif) {
+
+    tif = normalizeTIF(tif);
+
+    const client = clients.find(
+        client => client.tif === tif
+    );
+
+    if (!client) {
+        console.log("Client not found.");
+        return;
+    }
+
+    const reportCharges = getCompletedCharges().filter(
+        charge => charge.clientId === client.id
+    );
+
+    if (reportCharges.length === 0) {
+        console.log("No completed charges found for this client.");
+        return;
+    }
+
+    let totalEnergy = 0;
+    let totalCost = 0;
+
+    console.log("\n===== CHARGES REPORT BY CLIENT =====");
+    console.log(`Client: ${client.firstName} ${client.lastName}`);
+    console.log(`TIF: ${client.tif}`);
+
+    console.log(
+        "\nID | Station | Start | End | Energy | Cost"
+    );
+
+    console.log(
+        "---------------------------------------------------------------------"
+    );
+
+    for (const charge of reportCharges) {
+
+        console.log(`${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
+        );
+
+        totalEnergy += charge.energy;
+        totalCost += charge.cost;
+    }
+
+    console.log(
+        "---------------------------------------------------------------------"
+    );
+
+    console.log(
+        `Total energy: ${totalEnergy.toFixed(2)} kWh`
+    );
+
+    console.log(
+        `Total cost: ${totalCost.toFixed(2)} €`
+    );
+}
+
+function calculateAge(DOB) {
+
+    const birthDate = new Date(DOB);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
+
+function reportClientCharges(tif) {
+
+    tif = normalizeTIF(tif);
+
+    const client = clients.find(
+        client => client.tif === tif
+    );
+
+    if (!client) {
+        console.log("Client not found.");
+        return;
+    }
+
+    const clientCharges = charges.filter(
+        charge => charge.clientId === client.id
+    );
+
+    if (clientCharges.length === 0) {
+        console.log("This client has no charges.");
+        return;
+    }
+
+    let totalEnergy = 0;
+
+    for (const charge of clientCharges) {
+
+        totalEnergy += charge.energy;
+    }
+
+    totalEnergy = Number(totalEnergy.toFixed(2));
+
+    const age = calculateAge(client.DOB);
+
+    console.log("\n===== CLIENT REPORT =====");
+    console.log(`Name: ${client.firstName} ${client.lastName}`);
+    console.log(`TIF: ${client.tif}`);
+    console.log(`Age: ${age}`);
+    console.log(`Contact: ${client.phoneNumber}`);
+    console.log(`Licence plate: ${client.licenceCountry}: ${client.licencePlate}`);
+    console.log(`Number of charges: ${clientCharges.length}`);
+    console.log(`Total energy consumed: ${totalEnergy} kWh`);
+}
+
+// ==================== REPORTS MENU ====================
+
+function showReportsMenu() {
+
+    let option;
+
+    do {
+        console.log("\n===== REPORTS =====");
+        console.log("1. Charges report by station");
+        console.log("2. Charges report by client");
+        console.log("3. Client report");
+        console.log("0. Back");
+
+        option = input("Choose an option: ");
+
+        switch (option) {
+
+            case "1":
+
+                const stationCode = input("Station code: ");
+                reportChargesByStation(stationCode);
+
+                break;
+
+            case "2":
+
+                const clientTif = input("Client TIF: ");
+                reportChargesByClient(clientTif);
+
+                break;
+
+            case "3":
+                const reportTif = input("Client TIF: ");
+                reportClientCharges(reportTif);
+
+                break;
+
+            case "0":
+                break;
+
+            default:
+                console.log("Invalid option.");
+
+
+        }
+    } while (option !== "0");
+}; 
+
+showMainMenu()
