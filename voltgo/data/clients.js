@@ -1,0 +1,28 @@
+// 
+
+const clients = [
+    {
+        id: 1,
+        tif: "271747390",
+        firstName: "Roberto",
+        lastName: "Gomes",
+        DOB: "1995-07-13",
+        phoneNumber: "+351915439865",
+        licenceCountry: "Portugal",
+        licencePlate: "AA-21-BB",
+    },
+    {
+        id: 2,
+        tif: "278934321",
+        firstName: "Caetana",
+        lastName: "Silva",
+        DOB: "1998-01-15",
+        phoneNumber: "+351915439865",
+        licenceCountry: "Portugal",
+        licencePlate: "AA-21-BB",
+    },
+];
+
+//
+
+const inactiveClients = [];

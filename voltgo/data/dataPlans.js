@@ -1,0 +1,20 @@
+//
+
+const dataPlans = [
+    {
+        id: 1,
+        name: "Simple",
+        pricePerKwh: 0.17,
+        activationFee: 1.00,
+    },
+    {
+        id: 2,
+        name: "Deluxe",
+        pricePerKwh: 0.30,
+        activationFee: 2.50,
+    },
+];
+
+//
+
+const inactiveDataPlans = [];
