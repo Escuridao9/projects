@@ -2944,79 +2944,6 @@ function showDashboard() {
     );
 }
 
-
-// ==================== MAIN ====================
-
-function showMainMenu() {
-
-    showDashboard();
-
-    let option;
-
-    do {
-
-        console.log("\n==============================");
-        console.log("       VOLTGO MANAGEMENT");
-        console.log("==============================");
-
-        console.log("1. Stations");
-        console.log("2. Clients");
-        console.log("3. Data Plans");
-        console.log("4. Charges");
-        console.log("0. Exit");
-
-        option = input("Choose an option: ");
-
-        switch (option) {
-
-            case "1":
-
-                showStationsMenu();
-                break;
-
-
-            case "2":
-
-                showClientsMenu();
-                break;
-
-
-            case "3":
-
-                showDataPlansMenu();
-                break;
-
-
-            case "4":
-
-                showChargeMenu();
-                break;
-
-
-            case "0":
-
-                console.log("Exiting VoltGo...");
-                break;
-
-
-            default:
-
-                console.log("Invalid option.");
-        }
-
-    } while (option !== "0");
-}
-
-
-showMainMenu();
-
-
-
-
-
-
-
-
 // ==================== MAIN ====================
 
 function showMainMenu() {
@@ -3245,7 +3172,7 @@ function reportChargesByStation(stationCode) {
     console.log("\n===== CHARGES REPORT BY STATION =====");
     console.log(`Station: ${stationCode}`);
     console.log(
-        "\nID | Client | Start | End | Energy | Cost"
+        "\nID | Client ID | Start | End | Energy | Cost"
     );
 
     console.log(
@@ -3380,7 +3307,7 @@ function reportClientCharges(tif) {
     console.log(`TIF: ${client.tif}`);
     console.log(`Age: ${age}`);
     console.log(`Contact: ${client.phoneNumber}`);
-    console.log(`Licence plate: ${client.licenceCountry}: ${client.licencePlate}`);
+    console.log(`Licence plate: ${client.licencePlate} | ${client.licenceCountry}`);
     console.log(`Number of charges: ${clientCharges.length}`);
     console.log(`Total energy consumed: ${totalEnergy} kWh`);
 }
@@ -3433,7 +3360,4 @@ function showReportsMenu() {
     } while (option !== "0");
 }; 
 
-showMainMenu()
-
-
-
+showMainMenu();
