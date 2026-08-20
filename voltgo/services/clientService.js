@@ -26,7 +26,6 @@ function showClients() {
     }
 }
 
-
 // function that creates a client
 
 function createClient(
@@ -93,7 +92,6 @@ function createClient(
     );
 }
 
-
 // function that updates a client's info
 
 function updateClient(
@@ -159,7 +157,6 @@ function updateClient(
 
     console.log("Client updated successfully.");
 }
-
 
 // function that removes a client
 

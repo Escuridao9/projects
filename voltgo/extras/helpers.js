@@ -285,3 +285,30 @@ function countChargesByStatus(status) {
     ).length;
 
 }
+
+// function that returns how many charges are completed (terminated + invoiced)
+
+function getCompletedCharges() {
+
+    return charges.filter(
+        charge =>
+            charge.status === "terminated" || charge.status === "invoiced"
+    );
+}
+
+// function that returns the age
+
+function calculateAge(DOB) {
+
+    const birthDate = new Date(DOB);
+    const today = new Date();
+
+    let age = today.getFullYear() - birthDate.getFullYear();
+
+    const monthDifference = today.getMonth() - birthDate.getMonth();
+
+    if (monthDifference < 0 || (monthDifference === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+    }
+    return age;
+}
