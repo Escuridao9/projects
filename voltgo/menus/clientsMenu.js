@@ -28,7 +28,7 @@ function showClientsMenu() {
                 const tif = input("TIF: ");
                 const firstName = input("First name: ");
                 const lastName = input("Last name: ");
-                const DOB = input("Date of birth: ");
+                const DOB = input("Date of birth (YYYY-MM-DD): ");
 
                 const phonePrefix =
                     input("Country prefix: ");
@@ -71,7 +71,7 @@ function showClientsMenu() {
                     input("Last name: ");
 
                 const updateDOB =
-                    input("Date of birth: ");
+                    input("Date of birth (YYYY-MM-DD): ");
 
                 const updatePhonePrefix =
                     input("Country prefix: ");

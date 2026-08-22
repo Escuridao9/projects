@@ -32,10 +32,10 @@ function showChargeMenu() {
                     Number(input("Client ID: "));
 
                 const startDate =
-                    input("Start date: ");
+                    input("Start date (YYYY-MM-DDTHH:MM): ");
 
                 const endDate =
-                    input("End date: ");
+                    input("End date (YYYY-MM-DDTHH:MM): ");
 
                 const dataPlanId =
                     Number(input("Data plan ID: "));
@@ -67,10 +67,10 @@ function showChargeMenu() {
                     Number(input("Client ID: "));
 
                 const updateStartDate =
-                    input("Start date: ");
+                    input("Start date (YYYY-MM-DDTHH:MM): ");
 
                 const updateEndDate =
-                    input("End date: ");
+                    input("End date (YYYY-MM-DDTHH:MM): ");
 
                 const updateDataPlanId =
                     Number(input("Data plan ID: "));

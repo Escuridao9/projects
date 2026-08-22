@@ -1797,7 +1797,7 @@ function showClientsMenu() {
                 const tif = input("TIF: ");
                 const firstName = input("First name: ");
                 const lastName = input("Last name: ");
-                const DOB = input("Date of birth: ");
+                const DOB = input("Date of birth (YYYY-MM-DD): ");
 
                 const phonePrefix =
                     input("Country prefix: ");
@@ -1840,7 +1840,7 @@ function showClientsMenu() {
                     input("Last name: ");
 
                 const updateDOB =
-                    input("Date of birth: ");
+                    input("Date of birth (YYYY-MM-DD): ");
 
                 const updatePhonePrefix =
                     input("Country prefix: ");
@@ -2237,6 +2237,8 @@ function showDataPlansMenu() {
 // Function to calculate duration
 function calculateDuration(startDate, endDate) {
 
+    if (!endDate) return null;
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -2253,12 +2255,15 @@ function calculateEnergy(
     startDate,
     endDate
 ) {
-
     const station = stations.find(
         station => station.code === stationCode
     );
 
     if (!station) {
+        return null;
+    }
+
+    if (!endDate) {
         return null;
     }
 
@@ -2276,6 +2281,9 @@ function calculateCost(
     energy,
     dataPlanId
 ) {
+    if (energy === null) {
+        return null;
+    }
 
     const dataPlan = dataPlans.find(
         dataPlan => dataPlan.id === dataPlanId
@@ -2725,10 +2733,10 @@ function showChargeMenu() {
                     Number(input("Client ID: "));
 
                 const startDate =
-                    input("Start date: ");
+                    input("Start date (YYYY-MM-DDTHH:MM): ");
 
                 const endDate =
-                    input("End date: ");
+                    input("End date (YYYY-MM-DDTHH:MM): ");
 
                 const dataPlanId =
                     Number(input("Data plan ID: "));
@@ -2760,10 +2768,10 @@ function showChargeMenu() {
                     Number(input("Client ID: "));
 
                 const updateStartDate =
-                    input("Start date: ");
+                    input("Start date (YYYY-MM-DDTHH:MM): ");
 
                 const updateEndDate =
-                    input("End date: ");
+                    input("End date (YYYY-MM-DDTHH:MM): ");
 
                 const updateDataPlanId =
                     Number(input("Data plan ID: "));

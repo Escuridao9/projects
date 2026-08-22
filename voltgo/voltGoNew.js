@@ -797,11 +797,11 @@ const charges = [
         stationCode: "S003",
         clientId: 2,
         startDate: "2026-08-12T14:00",
-        endDate: "2026-08-12T14:30",
-        duration: 0.5,
-        energy: 37.5,
+        endDate: null,
+        duration: null,
+        energy: null,
         dataPlanId: 2,
-        cost: 13.75,
+        cost: null,
         status: "in process",
     },
 ];
@@ -1797,7 +1797,7 @@ function showClientsMenu() {
                 const tif = input("TIF: ");
                 const firstName = input("First name: ");
                 const lastName = input("Last name: ");
-                const DOB = input("Date of birth: ");
+                const DOB = input("Date of birth (YYYY-MM-DD): ");
 
                 const phonePrefix =
                     input("Country prefix: ");
@@ -1840,7 +1840,7 @@ function showClientsMenu() {
                     input("Last name: ");
 
                 const updateDOB =
-                    input("Date of birth: ");
+                    input("Date of birth (YYYY-MM-DD): ");
 
                 const updatePhonePrefix =
                     input("Country prefix: ");
@@ -2237,6 +2237,8 @@ function showDataPlansMenu() {
 // Function to calculate duration
 function calculateDuration(startDate, endDate) {
 
+    if (!endDate) return null;
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -2253,12 +2255,15 @@ function calculateEnergy(
     startDate,
     endDate
 ) {
-
     const station = stations.find(
         station => station.code === stationCode
     );
 
     if (!station) {
+        return null;
+    }
+
+    if (!endDate) {
         return null;
     }
 
@@ -2276,6 +2281,9 @@ function calculateCost(
     energy,
     dataPlanId
 ) {
+    if (energy === null) {
+        return null;
+    }
 
     const dataPlan = dataPlans.find(
         dataPlan => dataPlan.id === dataPlanId
@@ -2502,8 +2510,30 @@ function removeCharge(id) {
     );
 }
 
-
 // ==================== VALIDATE CHARGE ====================
+
+// function to validate date
+
+function validateDate(date) {
+
+    // validates the format
+
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(date)) {
+        return false;
+    }
+
+    // validates if the date exists
+
+    if (
+        isNaN(new Date(date).getTime()) ||
+        new Date(date).getFullYear() !== Number(date.substring(0, 4)) ||
+        new Date(date).getMonth() + 1 !== Number(date.substring(5, 7)) ||
+        new Date(date).getDate() !== Number(date.substring(8, 10))
+    ) {
+        return false;
+    }
+    return true;
+};
 
 function validateCharge(
     operation,
@@ -2534,45 +2564,35 @@ function validateCharge(
                 return false;
             }
 
-            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startDate)) {
-                console.log(
-                    "Invalid start date. Use the format YYYY-MM-DDTHH:MM."
-                );
+            if (!validateDate(startDate)) {
+                console.log("Invalid start date. Use the format YYYY-MM-DDTHH:MM.");
                 return false;
             }
 
-            if (
-                isNaN(new Date(startDate).getTime()) ||
-                new Date(startDate).getFullYear() !== Number(startDate.substring(0, 4)) ||
-                new Date(startDate).getMonth() + 1 !== Number(startDate.substring(5, 7)) ||
-                new Date(startDate).getDate() !== Number(startDate.substring(8, 10))
-            ) {
-                console.log("Invalid start date.");
-                return false;
-            }
+            if (status === "in process") {
 
-            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endDate)) {
-                console.log(
-                    "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
-                );
-                return false;
-            }
+                if (endDate !== null) {
+                    console.log(
+                        "A charge in process cannot have an end date."
+                    );
+                    return false;
+                }
 
-            if (
-                isNaN(new Date(endDate).getTime()) ||
-                new Date(endDate).getFullYear() !== Number(endDate.substring(0, 4)) ||
-                new Date(endDate).getMonth() + 1 !== Number(endDate.substring(5, 7)) ||
-                new Date(endDate).getDate() !== Number(endDate.substring(8, 10))
-            ) {
-                console.log("Invalid end date.");
-                return false;
-            }
+            } else {
 
-            if (new Date(endDate) <= new Date(startDate)) {
-                console.log(
-                    "End date must be after start date."
-                );
-                return false;
+                if (!validateDate(endDate)) {
+                    console.log(
+                        "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
+                    );
+                    return false;
+                }
+
+                if (new Date(endDate) <= new Date(startDate)) {
+                    console.log(
+                        "End date must be after start date."
+                    );
+                    return false;
+                }
             }
 
             if (!dataPlans.some(
@@ -2613,45 +2633,35 @@ function validateCharge(
                 return false;
             }
 
-            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(startDate)) {
-                console.log(
-                    "Invalid start date. Use the format YYYY-MM-DDTHH:MM."
-                );
+            if (!validateDate(startDate)) {
+                console.log("Invalid start date. Use the format YYYY-MM-DDTHH:MM.");
                 return false;
             }
 
-            if (
-                isNaN(new Date(startDate).getTime()) ||
-                new Date(startDate).getFullYear() !== Number(startDate.substring(0, 4)) ||
-                new Date(startDate).getMonth() + 1 !== Number(startDate.substring(5, 7)) ||
-                new Date(startDate).getDate() !== Number(startDate.substring(8, 10))
-            ) {
-                console.log("Invalid start date.");
-                return false;
-            }
+            if (status === "in process") {
 
-            if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(endDate)) {
-                console.log(
-                    "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
-                );
-                return false;
-            }
+                if (endDate !== null) {
+                    console.log(
+                        "A charge in process cannot have an end date."
+                    );
+                    return false;
+                }
 
-            if (
-                isNaN(new Date(endDate).getTime()) ||
-                new Date(endDate).getFullYear() !== Number(endDate.substring(0, 4)) ||
-                new Date(endDate).getMonth() + 1 !== Number(endDate.substring(5, 7)) ||
-                new Date(endDate).getDate() !== Number(endDate.substring(8, 10))
-            ) {
-                console.log("Invalid end date.");
-                return false;
-            }
+            } else {
 
-            if (new Date(endDate) <= new Date(startDate)) {
-                console.log(
-                    "End date must be after start date."
-                );
-                return false;
+                if (!validateDate(endDate)) {
+                    console.log(
+                        "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
+                    );
+                    return false;
+                }
+
+                if (new Date(endDate) <= new Date(startDate)) {
+                    console.log(
+                        "End date must be after start date."
+                    );
+                    return false;
+                }
             }
 
             if (!dataPlans.some(
@@ -2724,17 +2734,20 @@ function showChargeMenu() {
                 const clientId =
                     Number(input("Client ID: "));
 
-                const startDate =
-                    input("Start date: ");
-
-                const endDate =
-                    input("End date: ");
-
                 const dataPlanId =
                     Number(input("Data plan ID: "));
 
                 const status =
                     input("Status: ");
+
+                const startDate =
+                    input("Start date: ");
+
+                let endDate = null;
+
+                if (status !== "in process") {
+                    endDate = input("End date: ");
+                };
 
                 createCharge(
                     stationCode,
@@ -2759,17 +2772,20 @@ function showChargeMenu() {
                 const updateClientId =
                     Number(input("Client ID: "));
 
-                const updateStartDate =
-                    input("Start date: ");
-
-                const updateEndDate =
-                    input("End date: ");
-
                 const updateDataPlanId =
                     Number(input("Data plan ID: "));
 
                 const updateStatus =
                     input("Status: ");
+
+                const updateStartDate =
+                    input("Start date: ");
+
+                let updateEndDate = null;
+
+                if (status !== "in process") {
+                    updateEndDate = input("End date: ");
+                };
 
                 updateCharge(
                     updateId,

@@ -217,6 +217,8 @@ function validateDOB(DOB) {
 
 function calculateDuration(startDate, endDate) {
 
+    if (!endDate) return null;
+
     const start = new Date(startDate);
     const end = new Date(endDate);
 
@@ -233,12 +235,15 @@ function calculateEnergy(
     startDate,
     endDate
 ) {
-
     const station = stations.find(
         station => station.code === stationCode
     );
 
     if (!station) {
+        return null;
+    }
+
+    if (!endDate) {
         return null;
     }
 
@@ -250,29 +255,15 @@ function calculateEnergy(
     return Number(energy.toFixed(2));
 }
 
-function calculateEnergy(
-    stationCode,
-    startDate,
-    endDate
-) {
-
-    const station = stations.find(
-        station => station.code === stationCode
-    );
-
-    if (!station) {
-        return null;
-    }
-
-    calculateDuration(startDate, endDate);
-}
-
 // function that calculates cost of a charge
 
 function calculateCost(
     energy,
     dataPlanId
 ) {
+    if (energy === null) {
+        return null;
+    }
 
     const dataPlan = dataPlans.find(
         dataPlan => dataPlan.id === dataPlanId
