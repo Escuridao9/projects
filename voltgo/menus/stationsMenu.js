@@ -28,7 +28,7 @@ function showStationsMenu() {
                 const code = input("Code: ");
                 const district = input("District: ");
                 const municipality = input("Municipality: ");
-                const power = Number(input("Power: "));
+                const power = Number(input("Power: ").replace(",", "."));
                 const connectorType = input("Connector type: ");
                 const status = input("Status: ");
 
@@ -55,7 +55,7 @@ function showStationsMenu() {
                     input("New municipality: ");
 
                 const updatePower =
-                    Number(input("New power: "));
+                    Number(input("New power: ").replace(",", "."));
 
                 const updateConnectorType =
                     input("New connector type: ");

@@ -286,9 +286,9 @@ function countChargesByStatus(status) {
 
 }
 
-// function that returns how many charges are completed (terminated + invoiced)
+// function that returns all charges for the selected status
 
-function getCompletedChargesByStatus(status) {
+function getChargesByStatus(status) {
 
     return charges.filter(
         charge =>

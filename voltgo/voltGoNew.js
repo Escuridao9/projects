@@ -3012,109 +3012,47 @@ function showMainMenu() {
     } while (option !== "0");
 }
 
-// ==================== REPORTS FUNCTIONS ====================
+// ==================== REPORTS ====================
+
+// HELPERS
+
+// function that returns all charges for the selected status
 
 function getChargesByStatus(status) {
-    return charges.filter(charge => normalize(charge.status) === normalize(status));
+
+    return charges.filter(
+        charge => normalize(charge.status) === normalize(status)
+    );
 }
 
-function reportChargesByStation(stationCode, status) {
-    stationCode = stationCode.toUpperCase();
+// function that finds stations by stationCode
 
-    const reportCharges = getChargesByStatus(status).filter(
-        charge => charge.stationCode === stationCode
+function findStationByCode(code) {
+
+    code = code.toUpperCase();
+
+    return stations.find(
+        station =>
+            station.code === code
     );
+};
 
-    if (reportCharges.length === 0) {
-        console.log("No completed charges found for this station.");
-        return;
-    }
+// function that finds clients by TIF
 
-    let totalEnergy = 0;
-    let totalCost = 0;
-
-    console.log("\n===== CHARGES REPORT BY STATION =====");
-    console.log(`Station: ${stationCode}`);
-    console.log(
-        "\nID | Client ID | Start | End | Energy | Cost"
-    );
-
-    console.log(
-        "---------------------------------------------------------------------"
-    );
-
-    for (const charge of reportCharges) {
-        console.log(`${charge.id} | ${charge.clientId} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`);
-
-        totalEnergy += charge.energy;
-        totalCost += charge.cost;
-    }
-
-    console.log(
-        "---------------------------------------------------------------------"
-    );
-
-    console.log(`Total energy: ${totalEnergy.toFixed(2)} kWh`);
-    console.log(`Total cost: ${totalCost.toFixed(2)} €`);
-}
-
-function reportChargesByClient(tif, status) {
+function findClientByTIF(tif) {
     tif = normalizeTIF(tif);
 
-    const client = clients.find(
-        client => client.tif === tif
+    return clients.find(
+        client =>
+            client.tif === tif
+
     );
+};
 
-    if (!client) {
-        console.log("Client not found.");
-        return;
-    }
-
-    const reportCharges = getChargesByStatus(status).filter(
-        charge => charge.clientId === client.id
-    );
-
-    if (reportCharges.length === 0) {
-        console.log("No completed charges found for this client.");
-        return;
-    }
-
-    let totalEnergy = 0;
-    let totalCost = 0;
-
-    console.log("\n===== CHARGES REPORT BY CLIENT =====");
-    console.log(`Client: ${client.firstName} ${client.lastName}`);
-    console.log(`TIF: ${client.tif}`);
-
-    console.log(
-        "\nID | Station | Start | End | Energy | Cost"
-    );
-
-    console.log(
-        "---------------------------------------------------------------------"
-    );
-
-    for (const charge of reportCharges) {
-        console.log(`${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`);
-
-        totalEnergy += charge.energy;
-        totalCost += charge.cost;
-    }
-
-    console.log(
-        "---------------------------------------------------------------------"
-    );
-
-    console.log(
-        `Total energy: ${totalEnergy.toFixed(2)} kWh`
-    );
-
-    console.log(
-        `Total cost: ${totalCost.toFixed(2)} €`
-    );
-}
+//function that calculates age
 
 function calculateAge(DOB) {
+
     const birthDate = new Date(DOB);
     const today = new Date();
 
@@ -3126,18 +3064,89 @@ function calculateAge(DOB) {
         age--;
     }
     return age;
-}
+};
 
-function reportClientCharges(tif) {
-    tif = normalizeTIF(tif);
 
-    const client = clients.find(
-        client => client.tif === tif
+// REPORT FUNCTIONS
+
+// function that finds the charges of a station according to the 
+// selected status and generates a report with the charges, total 
+// energy consumed and total cost
+
+function reportChargesByStation(stationCode, status) {
+
+    stationCode = stationCode.toUpperCase();
+
+    const reportCharges = getChargesByStatus(status).filter(
+        charge => charge.stationCode === stationCode
     );
 
+    if (reportCharges.length === 0) {
+        return null;
+    }
+
+    let totalEnergy = 0;
+    let totalCost = 0;
+
+    for (const charge of reportCharges) {
+        totalEnergy += charge.energy;
+        totalCost += charge.cost;
+    }
+
+    return {
+        stationCode,
+        charges: reportCharges,
+        totalEnergy,
+        totalCost
+    };
+};
+
+// function that finds the charges of a client according to the 
+// selected status and generates a report with the charges, total 
+// energy consumed and total cost
+
+function reportChargesByClient(tif, status) {
+
+    const client = findClientByTIF(tif);
+
     if (!client) {
-        console.log("Client not found.");
-        return;
+        return null;
+    }
+
+    const reportCharges = getChargesByStatus(status).filter(
+        charge => charge.clientId === client.id
+    );
+
+    if (reportCharges.length === 0) {
+        return null;
+    }
+
+    let totalEnergy = 0;
+    let totalCost = 0;
+
+    for (const charge of reportCharges) {
+
+        totalEnergy += charge.energy;
+        totalCost += charge.cost;
+    }
+
+    return {
+        client,
+        charges: reportCharges,
+        totalEnergy,
+        totalCost
+    };
+};
+
+// function that finds a client by their TIF and generates a report
+// with their personal information, number of charges and total energy consumed
+
+function reportClientCharges(tif) {
+
+    const client = findClientByTIF(tif);
+
+    if (!client) {
+        return null;
     }
 
     const clientCharges = charges.filter(
@@ -3145,13 +3154,13 @@ function reportClientCharges(tif) {
     );
 
     if (clientCharges.length === 0) {
-        console.log("This client has no charges.");
-        return;
+        return null;
     }
 
     let totalEnergy = 0;
 
     for (const charge of clientCharges) {
+
         totalEnergy += charge.energy;
     }
 
@@ -3159,26 +3168,59 @@ function reportClientCharges(tif) {
 
     const age = calculateAge(client.DOB);
 
-    console.log("\n===== CLIENT REPORT =====");
-    console.log(`Name: ${client.firstName} ${client.lastName}`);
-    console.log(`TIF: ${client.tif}`);
-    console.log(`Age: ${age}`);
-    console.log(`Contact: ${client.phoneNumber}`);
-    console.log(`Licence plate: ${client.licencePlate} | ${client.licenceCountry}`);
-    console.log(`Number of charges: ${clientCharges.length}`);
-    console.log(`Total energy consumed: ${totalEnergy} kWh`);
-}
+    return {
+        client,
+        age,
+        numberOfCharges: clientCharges.length,
+        totalEnergy
+    };
+};
 
-// ==================== REPORTS MENU ====================
+// MENU FUNCTIONS
 
-function showReportsMenu() {
+// function that displays the menu for selecting the charge status 
+// (terminated or invoiced) to be used in the charges and cost reports
+
+function showStatusReportMenu() {
+
     let option;
 
     do {
-        console.log("\n===== REPORTS =====");
-        console.log("1. Charges report by station");
-        console.log("2. Charges report by client");
-        console.log("3. Client report");
+        console.log("\n===== CHARGE STATUS =====");
+        console.log("1. Terminated");
+        console.log("2. Invoiced");
+        console.log("0. Back");
+
+        option = input("Choose an option: ");
+
+        switch (option) {
+
+            case "1":
+                return "terminated";
+
+            case "2":
+                return "invoiced";
+
+            case "0":
+                return null; // porque queremos sair da função toda
+
+            default:
+                console.log("Invalid option.");
+        }
+    } while (option !== "0")
+}
+
+// function that displays the charges and cost report menu and generates
+// reports by station or by client
+
+function showChargesReportMenu() {
+
+    let option;
+
+    do {
+        console.log("\n===== CHARGES AND COST REPORT =====");
+        console.log("1. By station");
+        console.log("2. By client");
         console.log("0. Back");
 
         option = input("Choose an option: ");
@@ -3186,32 +3228,209 @@ function showReportsMenu() {
         switch (option) {
 
             case "1": {
+
                 const stationCode = input("Station code: ");
-                const status = input("Status (terminated/invoiced): ");
-                reportChargesByStation(stationCode, status);
-                break;
-            }
 
+                //check if the station exist
+
+                const station = findStationByCode(stationCode);
+
+                if (!station) {
+                    console.log("Station not found.");
+                    break;
+                };
+
+                // check the status
+
+                const status = showStatusReportMenu();
+
+                if (!status) {
+                    break;
+                }
+
+                const report =
+                    reportChargesByStation(
+                        stationCode,
+                        status
+                    );
+
+                if (!report) {
+                    console.log(`No ${status} charges found for this station.`);
+                    break;
+                }
+
+                console.log("\n===== CHARGES AND COST REPORT BY STATION =====");
+                console.log(`Station: ${report.stationCode}`);
+                console.log("\nID | Client ID | Start | End | Energy | Cost");
+                console.log("---------------------------------------------------------------------");
+
+                for (const charge of report.charges) {
+
+                    console.log(
+                        `${charge.id} | ${charge.clientId} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
+                    );
+                }
+
+                console.log("---------------------------------------------------------------------");
+                console.log(`Total energy: ${report.totalEnergy.toFixed(2)} kWh`);
+                console.log(`Total cost: ${report.totalCost.toFixed(2)} €`);
+
+                break;
+
+            }
             case "2": {
+
                 const clientTif = input("Client TIF: ");
-                const status = input("Status (terminated/invoiced): ");
-                reportChargesByClient(clientTif, status);
+
+                // check if the client exists
+
+                const normalizedTif = normalizeTIF(clientTif);
+
+                const client =
+                    clients.find(
+                        client => client.tif === normalizedTif
+                    );
+
+                if (!client) {
+                    console.log("Client not found.");
+                    break;
+                }
+
+                // check the satus 
+
+                const status = showStatusReportMenu();
+
+                if (!status) {
+                    break;
+                }
+
+                const report =
+                    reportChargesByClient(
+                        clientTif,
+                        status
+                    );
+
+                if (!report) {
+                    console.log(
+                        "No completed charges found for this client."
+                    );
+                    break;
+                }
+
+                console.log("\n===== CHARGES AND COST REPORT BY CLIENT =====");
+                console.log(
+                    `Client: ${report.client.firstName} ${report.client.lastName}`
+                );
+                console.log(`TIF: ${report.client.tif}`);
+                console.log("\nID | Station | Start | End | Energy | Cost");
+                console.log("---------------------------------------------------------------------");
+
+                for (const charge of report.charges) {
+
+                    console.log(
+                        `${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
+                    );
+                }
+
+                console.log("---------------------------------------------------------------------");
+                console.log(
+                    `Total energy: ${report.totalEnergy.toFixed(2)} kWh`
+                );
+                console.log(
+                    `Total cost: ${report.totalCost.toFixed(2)} €`
+                );
+
                 break;
             }
 
-            case "3": {
-                const reportTif = input("Client TIF: ");
-                reportClientCharges(reportTif);
-                break;
-            }
 
             case "0":
+
                 break;
 
+
             default:
+
                 console.log("Invalid option.");
         }
     } while (option !== "0");
 }
+// function that displays the reports menu and allows the user to choose
+// between the charges and cost report and the client report
 
-showMainMenu();
+function showReportsMenu() {
+
+    let option;
+
+    do {
+
+        console.log("\n=========== REPORTS ==========");
+        console.log("1. Charges and cost report");
+        console.log("2. Client report");
+        console.log("0. Back");
+
+        option = input("Choose an option: ");
+
+        switch (option) {
+
+            case "1":
+
+                showChargesReportMenu();
+
+                break;
+
+            case "2": {
+
+                const reportTif = input("Client TIF: ");
+
+                // check if the client exists
+
+                const client = findClientByTIF(reportTif);
+
+                if (!client) {
+                    console.log("Client not found.");
+                    break;
+                }
+
+                // check if the client has associated charges
+
+                const report = reportClientCharges(reportTif);
+
+                if (!report) {
+                    console.log("This client has no charges.");
+                    break;
+                }
+
+                console.log("\n===== CLIENT REPORT =====");
+                console.log(
+                    `Name: ${report.client.firstName} ${report.client.lastName}`
+                );
+                console.log(`TIF: ${report.client.tif}`);
+                console.log(`Age: ${report.age}`);
+                console.log(`Contact: ${report.client.phoneNumber}`);
+                console.log(
+                    `Licence plate: ${report.client.licencePlate} | ${report.client.licenceCountry}`
+                );
+                console.log(
+                    `Number of charges: ${report.numberOfCharges}`
+                );
+                console.log(
+                    `Total energy consumed: ${report.totalEnergy} kWh`
+                );
+
+                break;
+            }
+
+            case "0":
+
+                break;
+
+            default:
+
+                console.log("Invalid option.");
+        }
+
+    } while (option !== "0");
+};
+
+showMainMenu()

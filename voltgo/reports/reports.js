@@ -5,7 +5,7 @@ function reportChargesByStation(stationCode) {
 
     stationCode = stationCode.toUpperCase();
 
-    const reportCharges = getCompletedCharges().filter(
+    const reportCharges = getChargesByStatus().filter(
         charge => charge.stationCode === stationCode
     );
 
@@ -59,7 +59,7 @@ function reportChargesByClient(tif, status) {
         return;
     }
 
-    const reportCharges = getCompletedChargesByStatus(status).filter(
+    const reportCharges = getChargesByStatus(status).filter(
         charge => charge.clientId === client.id
     );
 
