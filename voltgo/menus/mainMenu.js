@@ -1,4 +1,4 @@
-//
+// function that displays the main management menu
 
 function showMainMenu() {
 

@@ -1,3 +1,5 @@
+// list of country prefixes and their respective phone number formats
+
 const countryPrefixes = [
     { prefix: "+1", regex: /^\d{10}$/ },
     { prefix: "+7", regex: /^\d{10}$/ },

@@ -1,4 +1,4 @@
-// 
+// list of client records
 
 const clients = [
     {
@@ -23,6 +23,6 @@ const clients = [
     },
 ];
 
-//
+// list of removed client records 
 
 const inactiveClients = [];

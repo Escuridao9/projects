@@ -288,18 +288,18 @@ function countChargesByStatus(status) {
 
 // function that returns how many charges are completed (terminated + invoiced)
 
-function getCompletedCharges() {
+function getCompletedChargesByStatus(status) {
 
     return charges.filter(
         charge =>
-            charge.status === "terminated" || charge.status === "invoiced"
+            normalize(charge.status) === normalize(status)
     );
 }
 
 // function that returns the age
 
 function calculateAge(DOB) {
-
+    
     const birthDate = new Date(DOB);
     const today = new Date();
 

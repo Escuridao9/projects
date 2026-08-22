@@ -1,4 +1,4 @@
-//
+// list of charging records
 
 const charges = [
     {
@@ -51,11 +51,11 @@ const charges = [
     },
 ];
 
-//
+// list of removed charging records 
 
 const inactiveCharges = [];
 
-//
+// list of possible statuses of a charging record
 
 const chargeStatuses = [
     "in process",

@@ -1,7 +1,7 @@
-//
+// function that displays the reports management menu
 
 function showReportsMenu() {
-
+    
     let option;
 
     do {
@@ -15,33 +15,32 @@ function showReportsMenu() {
 
         switch (option) {
 
-            case "1":
-
+            case "1": {
                 const stationCode = input("Station code: ");
-                reportChargesByStation(stationCode);
-
+                const status = input("Status (terminated/invoiced): ");
+                reportChargesByStation(stationCode, status);
                 break;
+            };
 
-            case "2":
-
+            case "2": {
                 const clientTif = input("Client TIF: ");
-                reportChargesByClient(clientTif);
-
+                const status = input("Status (terminated/invoiced): ");
+                reportChargesByClient(clientTif, status);
                 break;
+            };
 
-            case "3":
+            case "3": {
                 const reportTif = input("Client TIF: ");
                 reportClientCharges(reportTif);
-
                 break;
+            };
 
             case "0":
                 break;
 
             default:
                 console.log("Invalid option.");
-
-
         }
+
     } while (option !== "0");
 };

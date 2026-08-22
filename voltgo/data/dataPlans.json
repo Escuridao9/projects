@@ -1,4 +1,4 @@
-//
+// list of data plans
 
 const dataPlans = [
     {
@@ -15,6 +15,6 @@ const dataPlans = [
     },
 ];
 
-//
+// list of removed data plans
 
 const inactiveDataPlans = [];

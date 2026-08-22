@@ -1,4 +1,4 @@
-//
+// function that displays the station management menu
 
 function showStationsMenu() {
 

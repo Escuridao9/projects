@@ -1,5 +1,5 @@
-
-//
+// function that finds the charges of a station according to the selected status
+// and generates a report with the charges, total energy consumed and total cost
 
 function reportChargesByStation(stationCode) {
 
@@ -43,9 +43,10 @@ function reportChargesByStation(stationCode) {
     console.log(`Total cost: ${totalCost.toFixed(2)} €`);
 }
 
-//
+// function that finds the charges of a client according to the selected status
+// and generates a report with the charges, total energy consumed and total cost
 
-function reportChargesByClient(tif) {
+function reportChargesByClient(tif, status) {
 
     tif = normalizeTIF(tif);
 
@@ -58,7 +59,7 @@ function reportChargesByClient(tif) {
         return;
     }
 
-    const reportCharges = getCompletedCharges().filter(
+    const reportCharges = getCompletedChargesByStatus(status).filter(
         charge => charge.clientId === client.id
     );
 
@@ -83,9 +84,7 @@ function reportChargesByClient(tif) {
     );
 
     for (const charge of reportCharges) {
-
-        console.log(`${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
-        );
+        console.log(`${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`);
 
         totalEnergy += charge.energy;
         totalCost += charge.cost;
@@ -102,9 +101,11 @@ function reportChargesByClient(tif) {
     console.log(
         `Total cost: ${totalCost.toFixed(2)} €`
     );
-}
+};
 
-// 
+// function that finds a client by their TIF and generates 
+// a report with their information, number of charges and 
+// total energy consumed
 
 function reportClientCharges(tif) {
 
@@ -131,7 +132,6 @@ function reportClientCharges(tif) {
     let totalEnergy = 0;
 
     for (const charge of clientCharges) {
-
         totalEnergy += charge.energy;
     }
 

@@ -1,3 +1,5 @@
+// list of licence plate formats and their validation by country
+
 const licencePlateFormats = [
     { country: "Albania", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]{2}$/ },
     { country: "Andorra", regex: /^[A-Z]{1,2}\d{4}$/ },

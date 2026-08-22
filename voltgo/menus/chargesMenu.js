@@ -1,4 +1,4 @@
-//
+// function that displays the charge management menu
 
 function showChargeMenu() {
 

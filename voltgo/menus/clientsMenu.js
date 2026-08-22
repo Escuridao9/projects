@@ -1,4 +1,4 @@
-//
+// function that displays the client management menu
 
 function showClientsMenu() {
 

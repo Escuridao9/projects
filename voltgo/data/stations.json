@@ -30,11 +30,11 @@ const stations = [
     }
 ];
 
-// list of charging stations
+// list of removed charging stations
 
 const inactiveStations = [];
 
-// possible station status
+// list of possible station statuses
 
 const stationStatuses = [
     "active",

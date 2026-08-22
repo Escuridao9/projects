@@ -1,4 +1,4 @@
-// possible districts and municipalities where stations can be located
+// list of possible districts and municipalities where stations can be located
 
 const districts = [
     "Aveiro",
