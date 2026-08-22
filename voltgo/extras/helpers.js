@@ -242,16 +242,29 @@ function calculateEnergy(
         return null;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    const durationInHours =
-        (end - start) / (1000 * 60 * 60);
+    const durationInHours = calculateDuration(startDate, endDate)
 
     const energy =
         station.power * durationInHours;
 
     return Number(energy.toFixed(2));
+}
+
+function calculateEnergy(
+    stationCode,
+    startDate,
+    endDate
+) {
+
+    const station = stations.find(
+        station => station.code === stationCode
+    );
+
+    if (!station) {
+        return null;
+    }
+
+    calculateDuration(startDate, endDate);
 }
 
 // function that calculates cost of a charge
@@ -299,7 +312,7 @@ function getChargesByStatus(status) {
 // function that returns the age
 
 function calculateAge(DOB) {
-    
+
     const birthDate = new Date(DOB);
     const today = new Date();
 

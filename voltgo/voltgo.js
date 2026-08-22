@@ -2262,11 +2262,7 @@ function calculateEnergy(
         return null;
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    const durationInHours =
-        (end - start) / (1000 * 60 * 60);
+    const durationInHours = calculateDuration(startDate, endDate)
 
     const energy =
         station.power * durationInHours;
