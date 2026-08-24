@@ -3228,151 +3228,120 @@ function showStatusReportMenu() {
     } while (option !== "0")
 }
 
-// function that displays the charges and cost report menu and generates
-// reports by station or by client
 
-function showChargesReportMenu() {
+// function that displays the charges and cost report by station
 
-    let option;
+function showChargesByStationMenu() {
 
-    do {
-        console.log("\n===== CHARGES AND COST REPORT =====");
-        console.log("1. By station");
-        console.log("2. By client");
-        console.log("0. Back");
+    const stationCode = input("Station code: ");
 
-        option = input("Choose an option: ");
+    // check if the station exists
 
-        switch (option) {
+    const station = findStationByCode(stationCode);
 
-            case "1": {
+    if (!station) {
+        console.log("Station not found.");
+        return;
+    }
 
-                const stationCode = input("Station code: ");
+    // check the status
 
-                //check if the station exist
+    const status = showStatusReportMenu();
 
-                const station = findStationByCode(stationCode);
+    if (!status) {
+        return;
+    }
 
-                if (!station) {
-                    console.log("Station not found.");
-                    break;
-                };
+    const report =
+        reportChargesByStation(
+            stationCode,
+            status
+        );
 
-                // check the status
+    if (!report) {
+        console.log(`No ${status} charges found for this station.`);
+        return;
+    }
 
-                const status = showStatusReportMenu();
+    // display the data 
 
-                if (!status) {
-                    break;
-                }
+    console.log("\n===== CHARGES REPORT BY STATION =====");
+    console.log(`Station: ${report.stationCode}`);
+    console.log("\nID | Client ID | Start | End | Energy | Cost");
+    console.log("---------------------------------------------------------------------");
 
-                const report =
-                    reportChargesByStation(
-                        stationCode,
-                        status
-                    );
+    for (const charge of report.charges) {
 
-                if (!report) {
-                    console.log(`No ${status} charges found for this station.`);
-                    break;
-                }
+        console.log(
+            `${charge.id} | ${charge.clientId} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
+        );
+    }
 
-                console.log("\n===== CHARGES AND COST REPORT BY STATION =====");
-                console.log(`Station: ${report.stationCode}`);
-                console.log("\nID | Client ID | Start | End | Energy | Cost");
-                console.log("---------------------------------------------------------------------");
+    console.log("---------------------------------------------------------------------");
+    console.log(`Total energy: ${report.totalEnergy.toFixed(2)} kWh`);
+    console.log(`Total cost: ${report.totalCost.toFixed(2)} €`);
 
-                for (const charge of report.charges) {
+};
 
-                    console.log(
-                        `${charge.id} | ${charge.clientId} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
-                    );
-                }
+// function that displays the charges and cost report by client
 
-                console.log("---------------------------------------------------------------------");
-                console.log(`Total energy: ${report.totalEnergy.toFixed(2)} kWh`);
-                console.log(`Total cost: ${report.totalCost.toFixed(2)} €`);
+function showChargesByClientMenu() {
 
-                break;
+    const clientTif = input("Client TIF: ");
 
-            }
-            case "2": {
+    // check if the client exists
 
-                const clientTif = input("Client TIF: ");
+    const normalizedTif = normalizeTIF(clientTif);
 
-                // check if the client exists
+    const client =
+        clients.find(
+            client => client.tif === normalizedTif
+        );
 
-                const normalizedTif = normalizeTIF(clientTif);
+    if (!client) {
+        console.log("Client not found.");
+        return;
+    }
 
-                const client =
-                    clients.find(
-                        client => client.tif === normalizedTif
-                    );
+    // check the satus 
 
-                if (!client) {
-                    console.log("Client not found.");
-                    break;
-                }
+    const status = showStatusReportMenu();
 
-                // check the satus 
+    if (!status) {
+        return;
+    }
 
-                const status = showStatusReportMenu();
+    const report =
+        reportChargesByClient(
+            normalizedTif,
+            status
+        );
 
-                if (!status) {
-                    break;
-                }
+    if (!report) {
+        console.log(`No ${status} charges found for this client.`);
+        return;
+    }
 
-                const report =
-                    reportChargesByClient(
-                        clientTif,
-                        status
-                    );
+    // display the data 
 
-                if (!report) {
-                    console.log(
-                        "No completed charges found for this client."
-                    );
-                    break;
-                }
+    console.log("\n===== CHARGES REPORT BY CLIENT =====");
+    console.log(`Client: ${report.client.firstName} ${report.client.lastName}`);
+    console.log(`TIF: ${report.client.tif}`);
+    console.log("\nID | Station | Start | End | Energy | Cost");
+    console.log("---------------------------------------------------------------------");
 
-                console.log("\n===== CHARGES AND COST REPORT BY CLIENT =====");
-                console.log(
-                    `Client: ${report.client.firstName} ${report.client.lastName}`
-                );
-                console.log(`TIF: ${report.client.tif}`);
-                console.log("\nID | Station | Start | End | Energy | Cost");
-                console.log("---------------------------------------------------------------------");
+    for (const charge of report.charges) {
 
-                for (const charge of report.charges) {
+        console.log(
+            `${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
+        );
+    }
 
-                    console.log(
-                        `${charge.id} | ${charge.stationCode} | ${charge.startDate} | ${charge.endDate} | ${charge.energy} kWh | ${charge.cost} €`
-                    );
-                }
+    console.log("---------------------------------------------------------------------");
+    console.log(`Total energy: ${report.totalEnergy.toFixed(2)} kWh`);
+    console.log(`Total cost: ${report.totalCost.toFixed(2)} €`);
+};
 
-                console.log("---------------------------------------------------------------------");
-                console.log(
-                    `Total energy: ${report.totalEnergy.toFixed(2)} kWh`
-                );
-                console.log(
-                    `Total cost: ${report.totalCost.toFixed(2)} €`
-                );
-
-                break;
-            }
-
-
-            case "0":
-
-                break;
-
-
-            default:
-
-                console.log("Invalid option.");
-        }
-    } while (option !== "0");
-}
 // function that displays the reports menu and allows the user to choose
 // between the charges and cost report and the client report
 
@@ -3383,8 +3352,9 @@ function showReportsMenu() {
     do {
 
         console.log("\n=========== REPORTS ==========");
-        console.log("1. Charges and cost report");
-        console.log("2. Client report");
+        console.log("1. Charges report by station");
+        console.log("2. Charges report by client");
+        console.log("3. Client report");
         console.log("0. Back");
 
         option = input("Choose an option: ");
@@ -3393,11 +3363,17 @@ function showReportsMenu() {
 
             case "1":
 
-                showChargesReportMenu();
+                showChargesByStationMenu();
 
                 break;
 
-            case "2": {
+            case "2":
+
+                showChargesByClientMenu();
+
+                break;
+
+            case "3": {
 
                 const reportTif = input("Client TIF: ");
 
@@ -3420,21 +3396,13 @@ function showReportsMenu() {
                 }
 
                 console.log("\n===== CLIENT REPORT =====");
-                console.log(
-                    `Name: ${report.client.firstName} ${report.client.lastName}`
-                );
+                console.log(`Name: ${report.client.firstName} ${report.client.lastName}`);
                 console.log(`TIF: ${report.client.tif}`);
                 console.log(`Age: ${report.age}`);
                 console.log(`Contact: ${report.client.phoneNumber}`);
-                console.log(
-                    `Licence plate: ${report.client.licencePlate} | ${report.client.licenceCountry}`
-                );
-                console.log(
-                    `Number of charges: ${report.numberOfCharges}`
-                );
-                console.log(
-                    `Total energy consumed: ${report.totalEnergy} kWh`
-                );
+                console.log(`Licence plate: ${report.client.licencePlate} | ${report.client.licenceCountry}`);
+                console.log(`Number of charges: ${report.numberOfCharges}`);
+                console.log(`Total energy consumed: ${report.totalEnergy} kWh`);
 
                 break;
             }
