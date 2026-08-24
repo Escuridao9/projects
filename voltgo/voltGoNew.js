@@ -2569,6 +2569,11 @@ function validateCharge(
                 return false;
             }
 
+            if (!chargeStatuses.includes(status)) {
+                console.log("Invalid charge status.");
+                return false;
+            }
+
             if (status === "in process") {
 
                 if (endDate !== null) {
@@ -2599,11 +2604,6 @@ function validateCharge(
                 dataPlan => dataPlan.id === dataPlanId
             )) {
                 console.log("Data plan not found.");
-                return false;
-            }
-
-            if (!chargeStatuses.includes(status)) {
-                console.log("Invalid charge status.");
                 return false;
             }
 
@@ -2638,6 +2638,11 @@ function validateCharge(
                 return false;
             }
 
+            if (!chargeStatuses.includes(status)) {
+                console.log("Invalid charge status.");
+                return false;
+            }
+
             if (status === "in process") {
 
                 if (endDate !== null) {
@@ -2668,11 +2673,6 @@ function validateCharge(
                 dataPlan => dataPlan.id === dataPlanId
             )) {
                 console.log("Data plan not found.");
-                return false;
-            }
-
-            if (!chargeStatuses.includes(status)) {
-                console.log("Invalid charge status.");
                 return false;
             }
 
@@ -2740,12 +2740,15 @@ function showChargeMenu() {
                 const status =
                     input("Status: ");
 
+                const validStatus =
+                    getValidValue(status, chargeStatuses);
+
                 const startDate =
                     input("Start date: ");
 
                 let endDate = null;
 
-                if (status !== "in process") {
+                if (validStatus !== "in process") {
                     endDate = input("End date: ");
                 };
 
@@ -2778,12 +2781,15 @@ function showChargeMenu() {
                 const updateStatus =
                     input("Status: ");
 
+                const validUpdateStatus =
+                    getValidValue(updateStatus, chargeStatuses);
+
                 const updateStartDate =
                     input("Start date: ");
 
                 let updateEndDate = null;
 
-                if (status !== "in process") {
+                if (validUpdateStatus !== "in process") {
                     updateEndDate = input("End date: ");
                 };
 
