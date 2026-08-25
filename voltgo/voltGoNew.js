@@ -27,7 +27,6 @@ const districts = [
     "Madeira"
 ];
 
-
 // ==================== MUNICIPALITIES ====================
 
 const municipalitiesByDistrict = {
@@ -401,7 +400,6 @@ const municipalitiesByDistrict = {
     ]
 };
 
-
 const stationStatuses = [
     "active",
     "under maintenance"
@@ -414,259 +412,366 @@ const chargeStatuses = [
     "cancelled"
 ];
 
-
 const countryPrefixes = [
-    { prefix: "+1", regex: /^\d{10}$/ },
-    { prefix: "+7", regex: /^\d{10}$/ },
-    { prefix: "+20", regex: /^\d{10}$/ },
-    { prefix: "+27", regex: /^\d{9}$/ },
-    { prefix: "+30", regex: /^\d{10}$/ },
-    { prefix: "+31", regex: /^\d{9}$/ },
-    { prefix: "+32", regex: /^\d{8,9}$/ },
-    { prefix: "+33", regex: /^\d{9}$/ },
-    { prefix: "+34", regex: /^\d{9}$/ },
-    { prefix: "+36", regex: /^\d{9}$/ },
-    { prefix: "+39", regex: /^\d{9,10}$/ },
-    { prefix: "+40", regex: /^\d{9}$/ },
-    { prefix: "+41", regex: /^\d{9}$/ },
-    { prefix: "+43", regex: /^\d{4,13}$/ },
-    { prefix: "+44", regex: /^\d{10}$/ },
-    { prefix: "+45", regex: /^\d{8}$/ },
-    { prefix: "+46", regex: /^\d{9}$/ },
-    { prefix: "+47", regex: /^\d{8}$/ },
-    { prefix: "+48", regex: /^\d{9}$/ },
-    { prefix: "+49", regex: /^\d{5,11}$/ },
-    { prefix: "+51", regex: /^\d{9}$/ },
-    { prefix: "+52", regex: /^\d{10}$/ },
-    { prefix: "+53", regex: /^\d{8}$/ },
-    { prefix: "+54", regex: /^\d{10}$/ },
-    { prefix: "+55", regex: /^\d{10,11}$/ },
-    { prefix: "+56", regex: /^\d{9}$/ },
-    { prefix: "+57", regex: /^\d{10}$/ },
-    { prefix: "+58", regex: /^\d{10}$/ },
-    { prefix: "+60", regex: /^\d{9,10}$/ },
-    { prefix: "+61", regex: /^\d{9}$/ },
-    { prefix: "+62", regex: /^\d{9,12}$/ },
-    { prefix: "+63", regex: /^\d{10}$/ },
-    { prefix: "+64", regex: /^\d{8,10}$/ },
-    { prefix: "+65", regex: /^\d{8}$/ },
-    { prefix: "+66", regex: /^\d{9}$/ },
-    { prefix: "+81", regex: /^\d{9,10}$/ },
-    { prefix: "+82", regex: /^\d{9,10}$/ },
-    { prefix: "+84", regex: /^\d{9,10}$/ },
-    { prefix: "+86", regex: /^\d{11}$/ },
-    { prefix: "+90", regex: /^\d{10}$/ },
-    { prefix: "+91", regex: /^\d{10}$/ },
-    { prefix: "+92", regex: /^\d{10}$/ },
-    { prefix: "+93", regex: /^\d{9}$/ },
-    { prefix: "+94", regex: /^\d{9}$/ },
-    { prefix: "+95", regex: /^\d{8,10}$/ },
-    { prefix: "+98", regex: /^\d{10}$/ },
+    { prefix: "+1", regex: /^\d{10}$/ }, // United States, Canada
+    { prefix: "+7", regex: /^\d{10}$/ }, // Russia, Kazakhstan
+    { prefix: "+20", regex: /^\d{10}$/ }, // Egypt
+    { prefix: "+27", regex: /^\d{9}$/ }, // South Africa
+    { prefix: "+30", regex: /^\d{10}$/ }, // Greece
+    { prefix: "+31", regex: /^\d{9}$/ }, // Netherlands
+    { prefix: "+32", regex: /^\d{8,9}$/ }, // Belgium
+    { prefix: "+33", regex: /^\d{9}$/ }, // France
+    { prefix: "+34", regex: /^\d{9}$/ }, // Spain
+    { prefix: "+36", regex: /^\d{9}$/ }, // Hungary
+    { prefix: "+39", regex: /^\d{9,10}$/ }, // Italy
+    { prefix: "+40", regex: /^\d{9}$/ }, // Romania
+    { prefix: "+41", regex: /^\d{9}$/ }, // Switzerland
+    { prefix: "+43", regex: /^\d{4,13}$/ }, // Austria
+    { prefix: "+44", regex: /^\d{10}$/ }, // United Kingdom
+    { prefix: "+45", regex: /^\d{8}$/ }, // Denmark
+    { prefix: "+46", regex: /^\d{9}$/ }, // Sweden
+    { prefix: "+47", regex: /^\d{8}$/ }, // Norway
+    { prefix: "+48", regex: /^\d{9}$/ }, // Poland
+    { prefix: "+49", regex: /^\d{5,11}$/ }, // Germany
+    { prefix: "+51", regex: /^\d{9}$/ }, // Peru
+    { prefix: "+52", regex: /^\d{10}$/ }, // Mexico
+    { prefix: "+53", regex: /^\d{8}$/ }, // Cuba
+    { prefix: "+54", regex: /^\d{10}$/ }, // Argentina
+    { prefix: "+55", regex: /^\d{10,11}$/ }, // Brazil
+    { prefix: "+56", regex: /^\d{9}$/ }, // Chile
+    { prefix: "+57", regex: /^\d{10}$/ }, // Colombia
+    { prefix: "+58", regex: /^\d{10}$/ }, // Venezuela
+    { prefix: "+60", regex: /^\d{9,10}$/ }, // Malaysia
+    { prefix: "+61", regex: /^\d{9}$/ }, // Australia
+    { prefix: "+62", regex: /^\d{9,12}$/ }, // Indonesia
+    { prefix: "+63", regex: /^\d{10}$/ }, // Philippines
+    { prefix: "+64", regex: /^\d{8,10}$/ }, // New Zealand
+    { prefix: "+65", regex: /^\d{8}$/ }, // Singapore
+    { prefix: "+66", regex: /^\d{9}$/ }, // Thailand
+    { prefix: "+81", regex: /^\d{9,10}$/ }, // Japan
+    { prefix: "+82", regex: /^\d{9,10}$/ }, // South Korea
+    { prefix: "+84", regex: /^\d{9,10}$/ }, // Vietnam
+    { prefix: "+86", regex: /^\d{11}$/ }, // China
+    { prefix: "+90", regex: /^\d{10}$/ }, // Turkey
+    { prefix: "+91", regex: /^\d{10}$/ }, // India
+    { prefix: "+92", regex: /^\d{10}$/ }, // Pakistan
+    { prefix: "+93", regex: /^\d{9}$/ }, // Afghanistan
+    { prefix: "+94", regex: /^\d{9}$/ }, // Sri Lanka
+    { prefix: "+95", regex: /^\d{8,10}$/ }, // Myanmar
+    { prefix: "+98", regex: /^\d{10}$/ }, // Iran
 
-    { prefix: "+211", regex: /^\d{9}$/ },
-    { prefix: "+212", regex: /^\d{9}$/ },
-    { prefix: "+213", regex: /^\d{9}$/ },
-    { prefix: "+216", regex: /^\d{8}$/ },
-    { prefix: "+218", regex: /^\d{9}$/ },
-    { prefix: "+220", regex: /^\d{7}$/ },
-    { prefix: "+221", regex: /^\d{9}$/ },
-    { prefix: "+222", regex: /^\d{8}$/ },
-    { prefix: "+223", regex: /^\d{8}$/ },
-    { prefix: "+224", regex: /^\d{9}$/ },
-    { prefix: "+225", regex: /^\d{10}$/ },
-    { prefix: "+226", regex: /^\d{8}$/ },
-    { prefix: "+227", regex: /^\d{8}$/ },
-    { prefix: "+228", regex: /^\d{8}$/ },
-    { prefix: "+229", regex: /^\d{8}$/ },
-    { prefix: "+230", regex: /^\d{8}$/ },
-    { prefix: "+231", regex: /^\d{7,8}$/ },
-    { prefix: "+232", regex: /^\d{8}$/ },
-    { prefix: "+233", regex: /^\d{9}$/ },
-    { prefix: "+234", regex: /^\d{10}$/ },
-    { prefix: "+235", regex: /^\d{8}$/ },
-    { prefix: "+236", regex: /^\d{8}$/ },
-    { prefix: "+237", regex: /^\d{9}$/ },
-    { prefix: "+238", regex: /^\d{7}$/ },
-    { prefix: "+239", regex: /^\d{7}$/ },
-    { prefix: "+240", regex: /^\d{9}$/ },
-    { prefix: "+241", regex: /^\d{8}$/ },
-    { prefix: "+242", regex: /^\d{9}$/ },
-    { prefix: "+243", regex: /^\d{9}$/ },
-    { prefix: "+244", regex: /^\d{9}$/ },
-    { prefix: "+245", regex: /^\d{7}$/ },
-    { prefix: "+248", regex: /^\d{7}$/ },
-    { prefix: "+249", regex: /^\d{9}$/ },
-    { prefix: "+250", regex: /^\d{9}$/ },
-    { prefix: "+251", regex: /^\d{9}$/ },
-    { prefix: "+252", regex: /^\d{8,9}$/ },
-    { prefix: "+253", regex: /^\d{8}$/ },
-    { prefix: "+254", regex: /^\d{9}$/ },
-    { prefix: "+255", regex: /^\d{9}$/ },
-    { prefix: "+256", regex: /^\d{9}$/ },
-    { prefix: "+257", regex: /^\d{8}$/ },
-    { prefix: "+258", regex: /^\d{9}$/ },
-    { prefix: "+260", regex: /^\d{9}$/ },
-    { prefix: "+261", regex: /^\d{9}$/ },
-    { prefix: "+263", regex: /^\d{9}$/ },
-    { prefix: "+264", regex: /^\d{9}$/ },
-    { prefix: "+265", regex: /^\d{9}$/ },
-    { prefix: "+266", regex: /^\d{8}$/ },
-    { prefix: "+267", regex: /^\d{8}$/ },
-    { prefix: "+268", regex: /^\d{8}$/ },
-    { prefix: "+269", regex: /^\d{7}$/ },
+    { prefix: "+211", regex: /^\d{9}$/ }, // South Sudan
+    { prefix: "+212", regex: /^\d{9}$/ }, // Morocco
+    { prefix: "+213", regex: /^\d{9}$/ }, // Algeria
+    { prefix: "+216", regex: /^\d{8}$/ }, // Tunisia
+    { prefix: "+218", regex: /^\d{9}$/ }, // Libya
+    { prefix: "+220", regex: /^\d{7}$/ }, // Gambia
+    { prefix: "+221", regex: /^\d{9}$/ }, // Senegal
+    { prefix: "+222", regex: /^\d{8}$/ }, // Mauritania
+    { prefix: "+223", regex: /^\d{8}$/ }, // Mali
+    { prefix: "+224", regex: /^\d{9}$/ }, // Guinea
+    { prefix: "+225", regex: /^\d{10}$/ }, // Côte d'Ivoire
+    { prefix: "+226", regex: /^\d{8}$/ }, // Burkina Faso
+    { prefix: "+227", regex: /^\d{8}$/ }, // Niger
+    { prefix: "+228", regex: /^\d{8}$/ }, // Togo
+    { prefix: "+229", regex: /^\d{8}$/ }, // Benin
+    { prefix: "+230", regex: /^\d{8}$/ }, // Mauritius
+    { prefix: "+231", regex: /^\d{7,8}$/ }, // Liberia
+    { prefix: "+232", regex: /^\d{8}$/ }, // Sierra Leone
+    { prefix: "+233", regex: /^\d{9}$/ }, // Ghana
+    { prefix: "+234", regex: /^\d{10}$/ }, // Nigeria
+    { prefix: "+235", regex: /^\d{8}$/ }, // Chad
+    { prefix: "+236", regex: /^\d{8}$/ }, // Central African Republic
+    { prefix: "+237", regex: /^\d{9}$/ }, // Cameroon
+    { prefix: "+238", regex: /^\d{7}$/ }, // Cape Verde
+    { prefix: "+239", regex: /^\d{7}$/ }, // São Tomé and Príncipe
+    { prefix: "+240", regex: /^\d{9}$/ }, // Equatorial Guinea
+    { prefix: "+241", regex: /^\d{8}$/ }, // Gabon
+    { prefix: "+242", regex: /^\d{9}$/ }, // Republic of the Congo
+    { prefix: "+243", regex: /^\d{9}$/ }, // Democratic Republic of the Congo
+    { prefix: "+244", regex: /^\d{9}$/ }, // Angola
+    { prefix: "+245", regex: /^\d{7}$/ }, // Guinea-Bissau
+    { prefix: "+248", regex: /^\d{7}$/ }, // Seychelles
+    { prefix: "+249", regex: /^\d{9}$/ }, // Sudan
+    { prefix: "+250", regex: /^\d{9}$/ }, // Rwanda
+    { prefix: "+251", regex: /^\d{9}$/ }, // Ethiopia
+    { prefix: "+252", regex: /^\d{8,9}$/ }, // Somalia
+    { prefix: "+253", regex: /^\d{8}$/ }, // Djibouti
+    { prefix: "+254", regex: /^\d{9}$/ }, // Kenya
+    { prefix: "+255", regex: /^\d{9}$/ }, // Tanzania
+    { prefix: "+256", regex: /^\d{9}$/ }, // Uganda
+    { prefix: "+257", regex: /^\d{8}$/ }, // Burundi
+    { prefix: "+258", regex: /^\d{9}$/ }, // Mozambique
+    { prefix: "+260", regex: /^\d{9}$/ }, // Zambia
+    { prefix: "+261", regex: /^\d{9}$/ }, // Madagascar
+    { prefix: "+263", regex: /^\d{9}$/ }, // Zimbabwe
+    { prefix: "+264", regex: /^\d{9}$/ }, // Namibia
+    { prefix: "+265", regex: /^\d{9}$/ }, // Malawi
+    { prefix: "+266", regex: /^\d{8}$/ }, // Lesotho
+    { prefix: "+267", regex: /^\d{8}$/ }, // Botswana
+    { prefix: "+268", regex: /^\d{8}$/ }, // Eswatini
+    { prefix: "+269", regex: /^\d{7}$/ }, // Comoros
 
-    { prefix: "+290", regex: /^\d{4}$/ },
-    { prefix: "+291", regex: /^\d{7}$/ },
-    { prefix: "+297", regex: /^\d{7}$/ },
-    { prefix: "+298", regex: /^\d{6}$/ },
-    { prefix: "+299", regex: /^\d{6}$/ },
+    { prefix: "+290", regex: /^\d{4}$/ }, // Saint Helena
+    { prefix: "+291", regex: /^\d{7}$/ }, // Eritrea
+    { prefix: "+297", regex: /^\d{7}$/ }, // Aruba
+    { prefix: "+298", regex: /^\d{6}$/ }, // Faroe Islands
+    { prefix: "+299", regex: /^\d{6}$/ }, // Greenland
 
-    { prefix: "+350", regex: /^\d{8}$/ },
-    { prefix: "+351", regex: /^9\d{8}$/ },
-    { prefix: "+352", regex: /^\d{9}$/ },
-    { prefix: "+353", regex: /^\d{9}$/ },
-    { prefix: "+354", regex: /^\d{7}$/ },
-    { prefix: "+355", regex: /^\d{9}$/ },
-    { prefix: "+356", regex: /^\d{8}$/ },
-    { prefix: "+357", regex: /^\d{8}$/ },
-    { prefix: "+358", regex: /^\d{9,10}$/ },
-    { prefix: "+359", regex: /^\d{9}$/ },
-    { prefix: "+370", regex: /^\d{8}$/ },
-    { prefix: "+371", regex: /^\d{8}$/ },
-    { prefix: "+372", regex: /^\d{7,8}$/ },
-    { prefix: "+373", regex: /^\d{8}$/ },
-    { prefix: "+374", regex: /^\d{8}$/ },
-    { prefix: "+375", regex: /^\d{9}$/ },
-    { prefix: "+376", regex: /^\d{6}$/ },
-    { prefix: "+377", regex: /^\d{8,9}$/ },
-    { prefix: "+378", regex: /^\d{10}$/ },
-    { prefix: "+380", regex: /^\d{9}$/ },
-    { prefix: "+381", regex: /^\d{8,9}$/ },
-    { prefix: "+382", regex: /^\d{8}$/ },
-    { prefix: "+383", regex: /^\d{8}$/ },
-    { prefix: "+385", regex: /^\d{8,9}$/ },
-    { prefix: "+386", regex: /^\d{8}$/ },
-    { prefix: "+387", regex: /^\d{8}$/ },
-    { prefix: "+389", regex: /^\d{8}$/ },
+    { prefix: "+350", regex: /^\d{8}$/ }, // Gibraltar
+    { prefix: "+351", regex: /^9\d{8}$/ }, // Portugal
+    { prefix: "+352", regex: /^\d{9}$/ }, // Luxembourg
+    { prefix: "+353", regex: /^\d{9}$/ }, // Ireland
+    { prefix: "+354", regex: /^\d{7}$/ }, // Iceland
+    { prefix: "+355", regex: /^\d{9}$/ }, // Albania
+    { prefix: "+356", regex: /^\d{8}$/ }, // Malta
+    { prefix: "+357", regex: /^\d{8}$/ }, // Cyprus
+    { prefix: "+358", regex: /^\d{9,10}$/ }, // Finland
+    { prefix: "+359", regex: /^\d{9}$/ }, // Bulgaria
+    { prefix: "+370", regex: /^\d{8}$/ }, // Lithuania
+    { prefix: "+371", regex: /^\d{8}$/ }, // Latvia
+    { prefix: "+372", regex: /^\d{7,8}$/ }, // Estonia
+    { prefix: "+373", regex: /^\d{8}$/ }, // Moldova
+    { prefix: "+374", regex: /^\d{8}$/ }, // Armenia
+    { prefix: "+375", regex: /^\d{9}$/ }, // Belarus
+    { prefix: "+376", regex: /^\d{6}$/ }, // Andorra
+    { prefix: "+377", regex: /^\d{8,9}$/ }, // Monaco
+    { prefix: "+378", regex: /^\d{10}$/ }, // San Marino
+    { prefix: "+380", regex: /^\d{9}$/ }, // Ukraine
+    { prefix: "+381", regex: /^\d{8,9}$/ }, // Serbia
+    { prefix: "+382", regex: /^\d{8}$/ }, // Montenegro
+    { prefix: "+383", regex: /^\d{8}$/ }, // Kosovo
+    { prefix: "+385", regex: /^\d{8,9}$/ }, // Croatia
+    { prefix: "+386", regex: /^\d{8}$/ }, // Slovenia
+    { prefix: "+387", regex: /^\d{8}$/ }, // Bosnia and Herzegovina
+    { prefix: "+389", regex: /^\d{8}$/ }, // North Macedonia
 
-    { prefix: "+501", regex: /^\d{7}$/ },
-    { prefix: "+502", regex: /^\d{8}$/ },
-    { prefix: "+503", regex: /^\d{8}$/ },
-    { prefix: "+504", regex: /^\d{8}$/ },
-    { prefix: "+505", regex: /^\d{8}$/ },
-    { prefix: "+506", regex: /^\d{8}$/ },
-    { prefix: "+507", regex: /^\d{7,8}$/ },
-    { prefix: "+509", regex: /^\d{8}$/ },
+    { prefix: "+501", regex: /^\d{7}$/ }, // Belize
+    { prefix: "+502", regex: /^\d{8}$/ }, // Guatemala
+    { prefix: "+503", regex: /^\d{8}$/ }, // El Salvador
+    { prefix: "+504", regex: /^\d{8}$/ }, // Honduras
+    { prefix: "+505", regex: /^\d{8}$/ }, // Nicaragua
+    { prefix: "+506", regex: /^\d{8}$/ }, // Costa Rica
+    { prefix: "+507", regex: /^\d{7,8}$/ }, // Panama
+    { prefix: "+509", regex: /^\d{8}$/ }, // Haiti
 
-    { prefix: "+591", regex: /^\d{8}$/ },
-    { prefix: "+592", regex: /^\d{7}$/ },
-    { prefix: "+593", regex: /^\d{9}$/ },
-    { prefix: "+594", regex: /^\d{9}$/ },
-    { prefix: "+595", regex: /^\d{9}$/ },
-    { prefix: "+597", regex: /^\d{7}$/ },
-    { prefix: "+598", regex: /^\d{8}$/ },
-    { prefix: "+599", regex: /^\d{7,8}$/ },
+    { prefix: "+591", regex: /^\d{8}$/ }, // Bolivia
+    { prefix: "+592", regex: /^\d{7}$/ }, // Guyana
+    { prefix: "+593", regex: /^\d{9}$/ }, // Ecuador
+    { prefix: "+594", regex: /^\d{9}$/ }, // French Guiana
+    { prefix: "+595", regex: /^\d{9}$/ }, // Paraguay
+    { prefix: "+597", regex: /^\d{7}$/ }, // Suriname
+    { prefix: "+598", regex: /^\d{8}$/ }, // Uruguay
+    { prefix: "+599", regex: /^\d{7,8}$/ }, // Curaçao, Caribbean Netherlands
 
-    { prefix: "+670", regex: /^\d{8}$/ },
-    { prefix: "+672", regex: /^\d{6,8}$/ },
-    { prefix: "+673", regex: /^\d{7}$/ },
-    { prefix: "+674", regex: /^\d{7}$/ },
-    { prefix: "+675", regex: /^\d{7}$/ },
-    { prefix: "+676", regex: /^\d{7}$/ },
-    { prefix: "+677", regex: /^\d{7}$/ },
-    { prefix: "+678", regex: /^\d{7}$/ },
-    { prefix: "+679", regex: /^\d{7}$/ },
-    { prefix: "+680", regex: /^\d{7}$/ },
-    { prefix: "+681", regex: /^\d{6}$/ },
-    { prefix: "+682", regex: /^\d{5}$/ },
-    { prefix: "+683", regex: /^\d{4}$/ },
-    { prefix: "+685", regex: /^\d{7}$/ },
-    { prefix: "+686", regex: /^\d{8}$/ },
-    { prefix: "+687", regex: /^\d{6}$/ },
-    { prefix: "+688", regex: /^\d{5,7}$/ },
-    { prefix: "+689", regex: /^\d{8}$/ },
-    { prefix: "+690", regex: /^\d{4}$/ },
-    { prefix: "+691", regex: /^\d{7}$/ },
-    { prefix: "+692", regex: /^\d{7}$/ },
+    { prefix: "+670", regex: /^\d{8}$/ }, // Timor-Leste
+    { prefix: "+672", regex: /^\d{6,8}$/ }, // Australian External Territories
+    { prefix: "+673", regex: /^\d{7}$/ }, // Brunei
+    { prefix: "+674", regex: /^\d{7}$/ }, // Nauru
+    { prefix: "+675", regex: /^\d{7}$/ }, // Papua New Guinea
+    { prefix: "+676", regex: /^\d{7}$/ }, // Tonga
+    { prefix: "+677", regex: /^\d{7}$/ }, // Solomon Islands
+    { prefix: "+678", regex: /^\d{7}$/ }, // Vanuatu
+    { prefix: "+679", regex: /^\d{7}$/ }, // Fiji
+    { prefix: "+680", regex: /^\d{7}$/ }, // Palau
+    { prefix: "+681", regex: /^\d{6}$/ }, // Wallis and Futuna
+    { prefix: "+682", regex: /^\d{5}$/ }, // Cook Islands
+    { prefix: "+683", regex: /^\d{4}$/ }, // Niue
+    { prefix: "+685", regex: /^\d{7}$/ }, // Samoa
+    { prefix: "+686", regex: /^\d{8}$/ }, // Kiribati
+    { prefix: "+687", regex: /^\d{6}$/ }, // New Caledonia
+    { prefix: "+688", regex: /^\d{5,7}$/ }, // Tuvalu
+    { prefix: "+689", regex: /^\d{8}$/ }, // French Polynesia
+    { prefix: "+690", regex: /^\d{4}$/ }, // Tokelau
+    { prefix: "+691", regex: /^\d{7}$/ }, // Micronesia
+    { prefix: "+692", regex: /^\d{7}$/ }, // Marshall Islands
 
-    { prefix: "+850", regex: /^\d{8,10}$/ },
-    { prefix: "+852", regex: /^\d{8}$/ },
-    { prefix: "+853", regex: /^\d{8}$/ },
-    { prefix: "+855", regex: /^\d{8,9}$/ },
-    { prefix: "+856", regex: /^\d{8,10}$/ },
-    { prefix: "+880", regex: /^\d{10}$/ },
-    { prefix: "+886", regex: /^\d{9,10}$/ },
+    { prefix: "+850", regex: /^\d{8,10}$/ }, // North Korea
+    { prefix: "+852", regex: /^\d{8}$/ }, // Hong Kong
+    { prefix: "+853", regex: /^\d{8}$/ }, // Macau
+    { prefix: "+855", regex: /^\d{8,9}$/ }, // Cambodia
+    { prefix: "+856", regex: /^\d{8,10}$/ }, // Laos
+    { prefix: "+880", regex: /^\d{10}$/ }, // Bangladesh
+    { prefix: "+886", regex: /^\d{9,10}$/ }, // Taiwan
 
-    { prefix: "+960", regex: /^\d{7}$/ },
-    { prefix: "+961", regex: /^\d{7,8}$/ },
-    { prefix: "+962", regex: /^\d{8,9}$/ },
-    { prefix: "+963", regex: /^\d{9}$/ },
-    { prefix: "+964", regex: /^\d{10}$/ },
-    { prefix: "+965", regex: /^\d{8}$/ },
-    { prefix: "+966", regex: /^\d{9}$/ },
-    { prefix: "+967", regex: /^\d{9}$/ },
-    { prefix: "+968", regex: /^\d{8}$/ },
-    { prefix: "+970", regex: /^\d{9}$/ },
-    { prefix: "+971", regex: /^\d{9}$/ },
-    { prefix: "+972", regex: /^\d{9}$/ },
-    { prefix: "+973", regex: /^\d{8}$/ },
-    { prefix: "+974", regex: /^\d{8}$/ },
-    { prefix: "+975", regex: /^\d{8}$/ },
-    { prefix: "+976", regex: /^\d{8}$/ },
-    { prefix: "+977", regex: /^\d{10}$/ },
+    { prefix: "+960", regex: /^\d{7}$/ }, // Maldives
+    { prefix: "+961", regex: /^\d{7,8}$/ }, // Lebanon
+    { prefix: "+962", regex: /^\d{8,9}$/ }, // Jordan
+    { prefix: "+963", regex: /^\d{9}$/ }, // Syria
+    { prefix: "+964", regex: /^\d{10}$/ }, // Iraq
+    { prefix: "+965", regex: /^\d{8}$/ }, // Kuwait
+    { prefix: "+966", regex: /^\d{9}$/ }, // Saudi Arabia
+    { prefix: "+967", regex: /^\d{9}$/ }, // Yemen
+    { prefix: "+968", regex: /^\d{8}$/ }, // Oman
+    { prefix: "+970", regex: /^\d{9}$/ }, // Palestine
+    { prefix: "+971", regex: /^\d{9}$/ }, // United Arab Emirates
+    { prefix: "+972", regex: /^\d{9}$/ }, // Israel
+    { prefix: "+973", regex: /^\d{8}$/ }, // Bahrain
+    { prefix: "+974", regex: /^\d{8}$/ }, // Qatar
+    { prefix: "+975", regex: /^\d{8}$/ }, // Bhutan
+    { prefix: "+976", regex: /^\d{8}$/ }, // Mongolia
+    { prefix: "+977", regex: /^\d{10}$/ }, // Nepal
 
-    { prefix: "+992", regex: /^\d{9}$/ },
-    { prefix: "+993", regex: /^\d{8}$/ },
-    { prefix: "+994", regex: /^\d{9}$/ },
-    { prefix: "+995", regex: /^\d{9}$/ },
-    { prefix: "+996", regex: /^\d{9}$/ },
-    { prefix: "+998", regex: /^\d{9}$/ }
+    { prefix: "+992", regex: /^\d{9}$/ }, // Tajikistan
+    { prefix: "+993", regex: /^\d{8}$/ }, // Turkmenistan
+    { prefix: "+994", regex: /^\d{9}$/ }, // Azerbaijan
+    { prefix: "+995", regex: /^\d{9}$/ }, // Georgia
+    { prefix: "+996", regex: /^\d{9}$/ }, // Kyrgyzstan
+    { prefix: "+998", regex: /^\d{9}$/ } // Uzbekistan
 ];
-
 
 // ==================== LICENCE PLATES ====================
 
 const licencePlateFormats = [
+    // ==================== AFRICA ====================
+
+    { country: "Algeria", regex: /^\d{5}-\d{3}-\d{2}$/ },
+    { country: "Angola", regex: /^(?:LD|LA|AO)-\d{2}-\d{2}-[A-Z]{2}$/ },
+    { country: "Botswana", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]$/ },
+    { country: "Cameroon", regex: /^[A-Z]{2}\s?\d{4}\s?[A-Z]{2}$/ },
+    { country: "Egypt", regex: /^[A-Z0-9]{1,8}$/ },
+    { country: "Ghana", regex: /^[A-Z]{2}\s?\d{4}-\d{2}$/ },
+    { country: "Kenya", regex: /^[A-Z]{3}\s?\d{3}[A-Z]$/ },
+    { country: "Morocco", regex: /^\d{1,5}\s?[A-Z]{1,2}\s?\d{1,2}$/ },
+    { country: "Mozambique", regex: /^[A-Z]{2,3}-\d{2}-\d{2}$/ },
+    { country: "Namibia", regex: /^[A-Z]{2}\s?\d{4}$/ },
+    { country: "Nigeria", regex: /^[A-Z]{3}\s?\d{3}[A-Z]{2}$/ },
+    { country: "Rwanda", regex: /^(?:R[A-Z]{2}\s?\d{3}[A-Z])$/ },
+    { country: "Senegal", regex: /^[A-Z]{2}\s?\d{4}\s?[A-Z]{2}$/ },
+    { country: "South Africa", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]{2}$/ },
+    { country: "Tanzania", regex: /^[A-Z]{2,3}\s?\d{3}[A-Z]{1,2}$/ },
+    { country: "Tunisia", regex: /^\d{3}\s?\d{4}$/ },
+    { country: "Uganda", regex: /^[U][A-Z]{2}\s?\d{3}[A-Z]$/ },
+    { country: "Zambia", regex: /^[A-Z]{3}\s?\d{4}$/ },
+    { country: "Zimbabwe", regex: /^[A-Z]{2,3}\s?\d{4}$/ },
+
+
+    // ==================== ASIA ====================
+
+    { country: "Afghanistan", regex: /^[A-Z]{1,3}\s?\d{1,5}$/ },
+    { country: "Bangladesh", regex: /^[A-Z]{2}\s?\d{2}-\d{4}$/ },
+    { country: "Bhutan", regex: /^[A-Z]{2}-\d{4}$/ },
+    { country: "Brunei", regex: /^[A-Z]{1,2}\s?\d{4}$/ },
+    { country: "Cambodia", regex: /^[A-Z]{1,2}\s?\d{4}$/ },
+    { country: "China", regex: /^[A-Z]\s?[A-Z0-9]{5}$/ },
+    { country: "India", regex: /^[A-Z]{2}\s?\d{1,2}\s?[A-Z]{1,3}\s?\d{1,4}$/ },
+    { country: "Indonesia", regex: /^[A-Z]{1,2}\s?\d{1,4}\s?[A-Z]{1,3}$/ },
+    { country: "Iran", regex: /^\d{2}\s?[A-Z]\s?\d{3}\s?\d{2}$/ },
+    { country: "Iraq", regex: /^[A-Z]{1,3}\s?\d{1,6}$/ },
+    { country: "Israel", regex: /^\d{2,3}-\d{2,3}-\d{2,3}$/ },
+    { country: "Japan", regex: /^\d{2,3}-\d{2}\s?[A-Z0-9]{1,2}\s?\d{2}$/ },
+    { country: "Jordan", regex: /^[A-Z]{1,3}\s?\d{1,5}$/ },
+    { country: "Kazakhstan", regex: /^\d{3}[A-Z]{3}\s?\d{2}$/ },
+    { country: "Kuwait", regex: /^\d{1,5}$/ },
+    { country: "Laos", regex: /^[A-Z]{2}\s?\d{4}$/ },
+    { country: "Lebanon", regex: /^\d{6}$/ },
+    { country: "Malaysia", regex: /^[A-Z]{1,3}\s?\d{1,4}$/ },
+    { country: "Mongolia", regex: /^[A-Z]{1,3}\s?\d{4}$/ },
+    { country: "Myanmar", regex: /^[A-Z]{2,3}\s?\d{4}$/ },
+    { country: "Nepal", regex: /^[A-Z]{2}\s?\d{1,4}$/ },
+    { country: "Oman", regex: /^[A-Z]{1,2}\s?\d{1,5}$/ },
+    { country: "Pakistan", regex: /^[A-Z]{2,3}\s?\d{1,4}$/ },
+    { country: "Philippines", regex: /^[A-Z]{3}\s?\d{4}$/ },
+    { country: "Qatar", regex: /^[A-Z]{1,2}\s?\d{4,5}$/ },
+    { country: "Saudi Arabia", regex: /^\d{4}\s?[A-Z]{3}$/ },
+    { country: "Singapore", regex: /^[A-Z]{1,3}\s?\d{1,4}[A-Z]$/ },
+    { country: "South Korea", regex: /^\d{2,3}[A-Z]\s?\d{4}$/ },
+    { country: "Sri Lanka", regex: /^[A-Z]{2}\s?\d{4}$/ },
+    { country: "Taiwan", regex: /^[A-Z]{2,3}-\d{4,5}$/ },
+    { country: "Thailand", regex: /^[A-Z]{2}\s?\d{1,4}$/ },
+    { country: "United Arab Emirates", regex: /^[A-Z0-9]{1,6}$/ },
+    { country: "Uzbekistan", regex: /^\d{1,2}\s?[A-Z]\s?\d{3}[A-Z]{2}$/ },
+    { country: "Vietnam", regex: /^\d{2}[A-Z]-\d{3}\.\d{2}$/ },
+
+
+    // ==================== EUROPE ====================
+
     { country: "Albania", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]{2}$/ },
     { country: "Andorra", regex: /^[A-Z]{1,2}\d{4}$/ },
     { country: "Austria", regex: /^[A-Z]{1,2}-[A-Z]{1,2}\s?\d{1,5}$/ },
     { country: "Belgium", regex: /^[A-Z]-?\d{3}-?\d{3}$/ },
+    { country: "Bosnia and Herzegovina", regex: /^[A-Z]{1,2}\s?\d{3,4}-[A-Z]{1,2}$/ },
+    { country: "Bulgaria", regex: /^[A-Z]{1,2}\s?\d{4}\s?[A-Z]{1,2}$/ },
+    { country: "Croatia", regex: /^[A-Z]{2}\s?\d{3,4}-[A-Z]{1,2}$/ },
+    { country: "Cyprus", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Czech Republic", regex: /^[A-Z]\d{1,2}\s?\d{4,5}$/ },
+    { country: "Denmark", regex: /^[A-Z]{2}\s?\d{1,5}$/ },
+    { country: "Estonia", regex: /^\d{3}[A-Z]{3}$/ },
+    { country: "Finland", regex: /^[A-Z]{3}-\d{3}$/ },
     { country: "France", regex: /^[A-Z]{2}-\d{3}-[A-Z]{2}$/ },
     { country: "Germany", regex: /^[A-Z]{1,3}(?:-[A-Z]{1,2})?\s?\d{1,4}$/ },
+    { country: "Greece", regex: /^[A-Z]{3}-\d{4}$/ },
+    { country: "Hungary", regex: /^[A-Z]{3}-[A-Z]{3}\s?\d{3}$/ },
+    { country: "Iceland", regex: /^[A-Z]{2}\s?\d{3,4}$/ },
+    { country: "Ireland", regex: /^\d{2,3}-[A-Z]{1,2}-\d{1,6}$/ },
     { country: "Italy", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]{2}$/ },
+    { country: "Latvia", regex: /^[A-Z]{2}-\d{1,4}$/ },
+    { country: "Liechtenstein", regex: /^[FL]\s?\d{1,5}$/ },
+    { country: "Lithuania", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Luxembourg", regex: /^[A-Z]{2}\s?\d{4}$/ },
+    { country: "Malta", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Moldova", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Monaco", regex: /^\d{4}\s?[A-Z]$/ },
+    { country: "Montenegro", regex: /^[A-Z]{2}\s?\d{3,4}-[A-Z]{1,2}$/ },
     { country: "Netherlands", regex: /^[A-Z0-9]{2,3}-[A-Z0-9]{2,3}-[A-Z0-9]{2,3}$/ },
+    { country: "North Macedonia", regex: /^[A-Z]{2}\s?\d{4}-[A-Z]{2}$/ },
+    { country: "Norway", regex: /^[A-Z]{2}\s?\d{5}$/ },
+    { country: "Poland", regex: /^[A-Z]{1,3}\s?[A-Z0-9]{4,5}$/ },
     {
         country: "Portugal",
         regex: /^(?:[A-Z]{2}-\d{2}-[A-Z]{2}|\d{2}-[A-Z]{2}-\d{2}|\d{2}-\d{2}-[A-Z]{2}|[A-Z]{2}-\d{2}-\d{2})$/
     },
+    { country: "Romania", regex: /^[A-Z]{1,2}\s?\d{2,3}\s?[A-Z]{3}$/ },
+    { country: "San Marino", regex: /^[A-Z]{1,2}\s?\d{4}$/ },
+    { country: "Serbia", regex: /^[A-Z]{2}\s?\d{3,4}-[A-Z]{2}$/ },
+    { country: "Slovakia", regex: /^[A-Z]{2}\s?\d{3}[A-Z]{2}$/ },
+    { country: "Slovenia", regex: /^[A-Z]{2}\s?\d{3,4}$/ },
     { country: "Spain", regex: /^\d{4}\s?[A-Z]{3}$/ },
+    { country: "Sweden", regex: /^[A-Z]{3}\s?\d{3}$/ },
     { country: "Switzerland", regex: /^[A-Z]{1,2}\s?\d{1,6}$/ },
+    { country: "Turkey", regex: /^\d{2}\s?[A-Z]{1,3}\s?\d{2,5}$/ },
+    { country: "Ukraine", regex: /^[A-Z]{2}\s?\d{4}\s?[A-Z]{2}$/ },
     { country: "United Kingdom", regex: /^[A-Z]{2}\d{2}\s?[A-Z]{3}$/ },
 
+
+    // ==================== NORTH AMERICA ====================
+
     { country: "Canada", regex: /^[A-Z0-9]{2,8}$/ },
-    { country: "United States", regex: /^[A-Z0-9]{1,8}$/ },
+    { country: "Costa Rica", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Cuba", regex: /^[A-Z]\s?\d{5}$/ },
+    { country: "Dominican Republic", regex: /^[A-Z0-9]{2,7}$/ },
+    { country: "El Salvador", regex: /^[A-Z]{1,3}-\d{4}$/ },
+    { country: "Guatemala", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Honduras", regex: /^[A-Z]{3}\s?\d{3,4}$/ },
+    { country: "Jamaica", regex: /^[A-Z]{2,3}\s?\d{4}$/ },
     { country: "Mexico", regex: /^[A-Z0-9]{2,8}$/ },
+    { country: "Nicaragua", regex: /^[A-Z]{1,3}\s?\d{4}$/ },
+    { country: "Panama", regex: /^[A-Z]{2,3}\s?\d{4}$/ },
+    { country: "United States", regex: /^[A-Z0-9]{1,8}$/ },
+
+
+    // ==================== OCEANIA ====================
+
+    { country: "Australia", regex: /^[A-Z0-9]{2,7}$/ },
+    { country: "Fiji", regex: /^[A-Z]{2}\s?\d{3}$/ },
+    { country: "New Zealand", regex: /^[A-Z]{1,3}\s?\d{1,4}$/ },
+    { country: "Papua New Guinea", regex: /^[A-Z]{2}\s?\d{4}$/ },
+    { country: "Samoa", regex: /^[A-Z]{2}\s?\d{3}$/ },
+    { country: "Tonga", regex: /^[A-Z]{1,2}\s?\d{3,4}$/ },
+
+
+    // ==================== SOUTH AMERICA ====================
 
     { country: "Argentina", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]{2}$/ },
+    { country: "Bolivia", regex: /^[A-Z]{3}\s?\d{3}$/ },
     { country: "Brazil", regex: /^[A-Z]{3}-\d[A-Z0-9]\d{2}$/ },
     { country: "Chile", regex: /^[A-Z]{2}\s?\d{2}\s?\d{2}$/ },
     { country: "Colombia", regex: /^[A-Z]{3}\s?\d{3}$/ },
+    { country: "Ecuador", regex: /^[A-Z]{3}-\d{3,4}$/ },
+    { country: "Paraguay", regex: /^[A-Z]{3}\s?\d{3}$/ },
     { country: "Peru", regex: /^[A-Z]{3}-\d{3}$/ },
-
-    { country: "Algeria", regex: /^\d{5}-\d{3}-\d{2}$/ },
-    { country: "Angola", regex: /^(?:LD|LA|AO)-\d{2}-\d{2}-[A-Z]{2}$/ },
-    { country: "Egypt", regex: /^[A-Z0-9]{1,8}$/ },
-    { country: "Morocco", regex: /^\d{1,5}\s?[A-Z]{1,2}\s?\d{1,2}$/ },
-    { country: "Mozambique", regex: /^[A-Z]{2,3}-\d{2}-\d{2}$/ },
-    { country: "South Africa", regex: /^[A-Z]{2}\s?\d{3}\s?[A-Z]{2}$/ },
-
-    { country: "China", regex: /^[A-Z]\s?[A-Z0-9]{5}$/ },
-    { country: "India", regex: /^[A-Z]{2}\s?\d{1,2}\s?[A-Z]{1,3}\s?\d{1,4}$/ },
-    { country: "Japan", regex: /^\d{2,3}-\d{2}\s?[A-Z0-9]{1,2}\s?\d{2}$/ },
-    { country: "South Korea", regex: /^\d{2,3}[A-Z]\s?\d{4}$/ },
-
-    { country: "Australia", regex: /^[A-Z0-9]{2,7}$/ },
-    { country: "New Zealand", regex: /^[A-Z]{1,3}\s?\d{1,4}$/ }
+    { country: "Uruguay", regex: /^[A-Z]{3}\s?\d{3,4}$/ },
+    { country: "Venezuela", regex: /^[A-Z]{3}\s?\d{3}$/ }
 ];
 
 
@@ -714,7 +819,7 @@ const clients = [
         firstName: "Roberto",
         lastName: "Gomes",
         DOB: "1995-07-13",
-        phoneNumber: "+351915439865",
+        phoneNumber: "+351916291322",
         licenceCountry: "Portugal",
         licencePlate: "AA-21-BB",
     },
@@ -726,7 +831,7 @@ const clients = [
         DOB: "1998-01-15",
         phoneNumber: "+351915439865",
         licenceCountry: "Portugal",
-        licencePlate: "AA-21-BB",
+        licencePlate: "GH-45-AC",
     },
 ];
 
@@ -811,7 +916,7 @@ const inactiveCharges = [];
 
 // ==================== GENERAL HELPERS ====================
 
-function normalize(value) {
+function normalizeValue(value) {
 
     return value
         .toLowerCase()
@@ -824,7 +929,7 @@ function normalize(value) {
 function getValidValue(value, list) {
 
     return list.find(
-        validValue => normalize(validValue) === normalize(value)
+        validValue => normalizeValue(validValue) === normalizeValue(value)
     );
 
 }
@@ -846,8 +951,8 @@ function getValidMunicipality(
 
     return municipalities.find(
         validMunicipality =>
-            normalize(validMunicipality) ===
-            normalize(municipality)
+            normalizeValue(validMunicipality) ===
+            normalizeValue(municipality)
     );
 
 }
@@ -875,7 +980,7 @@ function getValidLicenceCountry(country) {
 
     return licencePlateFormats.find(
         licenceCountry =>
-            normalize(licenceCountry.country) === normalize(country)
+            normalizeValue(licenceCountry.country) === normalizeValue(country)
     );
 
 }
@@ -900,7 +1005,7 @@ function createStation(
     status
 ) {
 
-    code = code.toUpperCase();
+    code = normalizeWord(code);
     connectorType = connectorType.toUpperCase();
 
     if (!validateStation(
@@ -995,9 +1100,7 @@ function updateStation(
         return;
     }
 
-    const station = stations.find(
-        station => station.code === code
-    );
+    const station = findStationByCode(code);
 
     const validDistrict =
         getValidValue(district, districts);
@@ -1053,137 +1156,89 @@ function validateStation(
     connectorType,
     status
 ) {
+    const station = findStationByCode(code);
 
-    switch (operation) {
+    if (operation === "create") {
 
-        case "create":
-
-            if (!/^S\d{3}$/.test(code)) {
-                console.log(
-                    "Code must have the letter S, followed by three digits: e.g. S234"
-                );
-                return false;
-            }
-
-            if (stations.some(
-                station => station.code === code
-            )) {
-                console.log(
-                    "There's already a station with that code."
-                );
-                return false;
-            }
-
-            if (!getValidValue(district, districts)) {
-                console.log("Invalid district.");
-                return false;
-            }
-
-            if (!getValidMunicipality(
-                district,
-                municipality
-            )) {
-                console.log(
-                    "Invalid municipality for the selected district."
-                );
-                return false;
-            }
-
-            if (isNaN(power) || power <= 0) {
-                console.log(
-                    "Power must be greater than zero."
-                );
-                return false;
-            }
-
-            if (!/^[A-Z]{3}$/.test(connectorType)) {
-                console.log(
-                    "Connector type must be three uppercase letters: e.g. RTG"
-                );
-                return false;
-            }
-
-            if (!getValidValue(status, stationStatuses)) {
-                console.log("Invalid status.");
-                return false;
-            }
-
-            break;
-
-
-        case "update":
-
-            if (!stations.some(
-                station => station.code === code
-            )) {
-                console.log("Station not found.");
-                return false;
-            }
-
-            if (!getValidValue(district, districts)) {
-                console.log("Invalid district.");
-                return false;
-            }
-
-            if (!getValidMunicipality(
-                district,
-                municipality
-            )) {
-                console.log(
-                    "Invalid municipality for the selected district."
-                );
-                return false;
-            }
-
-            if (isNaN(power) || power <= 0) {
-                console.log(
-                    "Power must be greater than zero."
-                );
-                return false;
-            }
-
-            if (!/^[A-Z]{3}$/.test(connectorType)) {
-                console.log(
-                    "Connector type must be three uppercase letters: e.g. RTG"
-                );
-                return false;
-            }
-
-            if (!getValidValue(status, stationStatuses)) {
-                console.log("Invalid status.");
-                return false;
-            }
-
-            break;
-
-
-        case "remove":
-
-            const station = stations.find(
-                station => station.code === code
+        if (!/^S\d{3}$/.test(code)) {
+            console.log(
+                "Code must have the letter S, followed by three digits: e.g. S234"
             );
-
-            if (!station) {
-                console.log("Station not found.");
-                return false;
-            }
-
-            if (charges.some(
-                charge => charge.stationCode === code
-            )) {
-                console.log(
-                    "It's not possible to remove that station because there are charges associated with it."
-                );
-                return false;
-            }
-
-            break;
-
-
-        default:
-
-            console.log("Invalid operation.");
             return false;
+        }
+
+        if (station) {
+            console.log(
+                "There's already a station with that code."
+            );
+            return false;
+        }
+
+    } else if (operation === "update") {
+
+        if (!station) {
+            console.log("Station not found.");
+            return false;
+        }
+
+    } else if (operation === "remove") {
+
+        if (!station) {
+            console.log("Station not found.");
+            return false;
+        }
+
+        if (charges.some(
+            charge => charge.stationCode === code
+        )) {
+            console.log(
+                "It's not possible to remove that station because there are charges associated with it."
+            );
+            return false;
+        }
+
+        return true;
+
+    } else {
+
+        console.log("Invalid operation.");
+        return false;
+    }
+
+    // Shared create/update validation
+
+    if (!getValidValue(district, districts)) {
+        console.log("Invalid district.");
+        return false;
+    }
+
+    if (!getValidMunicipality(
+        district,
+        municipality
+    )) {
+        console.log(
+            "Invalid municipality for the selected district."
+        );
+        return false;
+    }
+
+    if (isNaN(power) || power <= 0) {
+        console.log(
+            "Power must be greater than zero."
+        );
+        return false;
+    }
+
+    if (!/^[A-Z]{3}$/.test(connectorType)) {
+        console.log(
+            "Connector type must be three uppercase letters: e.g. RTG"
+        );
+        return false;
+    }
+
+    if (!getValidValue(status, stationStatuses)) {
+        console.log("Invalid status.");
+        return false;
     }
 
     return true;
@@ -1287,42 +1342,22 @@ function showStationsMenu() {
 
 // ==================== CLIENTS ====================
 
-function normalizeName(name) {
-
-    return name.charAt(0).toUpperCase() +
-        name.slice(1).toLowerCase();
-
+function normalizeWord(value) {
+    value = value.replace(/\s+/g, "");
+    return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
 }
-
-function normalizeTIF(tif) {
-
-    return tif
-        .trim()
-        .replace(/\s+/g, "");
-
-}
-
 
 // ==================== PHONE HELPERS ====================
 
 function normalizePhonePrefix(phonePrefix) {
 
-    phonePrefix = phonePrefix
-        .trim()
-        .replace(/\s+/g, "");
+    phonePrefix = normalizeValue(phonePrefix);
 
     if (!phonePrefix.startsWith("+")) {
         phonePrefix = "+" + phonePrefix;
     }
 
     return phonePrefix;
-}
-
-function normalizePhoneNumber(phoneNumber) {
-
-    return phoneNumber
-        .replace(/[\s-]+/g, "");
-
 }
 
 function validatePhone(phonePrefix, phoneNumber) {
@@ -1456,15 +1491,15 @@ function createClient(
     licencePlate
 ) {
 
-    tif = normalizeTIF(tif);
+    tif = normalizeValue(tif);
 
-    firstName = normalizeName(firstName);
-    lastName = normalizeName(lastName);
+    firstName = normalizeWord(firstName);
+    lastName = normalizeWord(lastName);
 
     DOB = DOB.replace(/[\/\s]+/g, "-");
 
     phonePrefix = normalizePhonePrefix(phonePrefix);
-    phoneNumber = normalizePhoneNumber(phoneNumber);
+    phoneNumber = normalizeValue(phoneNumber);
 
     licenceCountry = licenceCountry.trim();
 
@@ -1524,28 +1559,19 @@ function updateClient(
     licencePlate
 ) {
 
-    tif = normalizeTIF(tif);
+    tif = normalizeValue(tif);
 
-    firstName = normalizeName(firstName);
-    lastName = normalizeName(lastName);
+    firstName = normalizeWord(firstName);
+    lastName = normalizeWord(lastName);
 
     DOB = DOB.replace(/[\/\s]+/g, "-");
 
     phonePrefix = normalizePhonePrefix(phonePrefix);
-    phoneNumber = normalizePhoneNumber(phoneNumber);
+    phoneNumber = normalizeValue(phoneNumber);
 
     licenceCountry = licenceCountry.trim();
 
     licencePlate = normalizeLicencePlate(licencePlate);
-
-    const client = clients.find(
-        client => client.id === id
-    );
-
-    if (!client) {
-        console.log("Client not found.");
-        return;
-    }
 
     if (!validateClient(
         "update",
@@ -1561,6 +1587,10 @@ function updateClient(
     )) {
         return;
     }
+
+    const client = clients.find(
+        client => client.id === id
+    );
 
     const validLicenceCountry =
         getValidLicenceCountry(licenceCountry);
@@ -1616,151 +1646,109 @@ function validateClient(
     licenceCountry,
     licencePlate
 ) {
+    const client = clients.find(
+        client => client.id === id
+    );
 
-    switch (operation) {
+    if (operation === "create") {
 
-        case "create":
-
-            if (!/^\d{9}$/.test(tif)) {
-                console.log(
-                    "TIF must contain exactly 9 digits."
-                );
-                return false;
-            }
-
-            if (clients.some(
-                client => client.tif === tif
-            )) {
-                console.log(
-                    "There's already a client with that TIF."
-                );
-                return false;
-            }
-
-            if (!/^[A-Za-zÀ-ÿ]+$/.test(firstName)) {
-                console.log(
-                    "First name can only contain letters."
-                );
-                return false;
-            }
-
-            if (!/^[A-Za-zÀ-ÿ]+$/.test(lastName)) {
-                console.log(
-                    "Last name can only contain letters."
-                );
-                return false;
-            }
-
-            if (!validateDOB(DOB)) {
-                return false;
-            }
-
-            if (!validatePhone(
-                phonePrefix,
-                phoneNumber
-            )) {
-                return false;
-            }
-
-            if (!validateLicencePlate(
-                licenceCountry,
-                licencePlate
-            )) {
-                return false;
-            }
-
-            break;
-
-
-        case "update":
-
-            if (!clients.some(
-                client => client.id === id
-            )) {
-                console.log("Client not found.");
-                return false;
-            }
-
-            if (!/^\d{9}$/.test(tif)) {
-                console.log(
-                    "TIF must contain exactly 9 digits."
-                );
-                return false;
-            }
-
-            if (clients.some(
-                client =>
-                    client.id !== id &&
-                    client.tif === tif
-            )) {
-                console.log(
-                    "There's already a client with that TIF."
-                );
-                return false;
-            }
-
-            if (!/^[A-Za-zÀ-ÿ]+$/.test(firstName)) {
-                console.log(
-                    "First name can only contain letters."
-                );
-                return false;
-            }
-
-            if (!/^[A-Za-zÀ-ÿ]+$/.test(lastName)) {
-                console.log(
-                    "Last name can only contain letters."
-                );
-                return false;
-            }
-
-            if (!validateDOB(DOB)) {
-                return false;
-            }
-
-            if (!validatePhone(
-                phonePrefix,
-                phoneNumber
-            )) {
-                return false;
-            }
-
-            if (!validateLicencePlate(
-                licenceCountry,
-                licencePlate
-            )) {
-                return false;
-            }
-
-            break;
-
-
-        case "remove":
-
-            const client = clients.find(
-                client => client.id === id
+        if (!/^\d{9}$/.test(tif)) {
+            console.log(
+                "TIF must contain exactly 9 digits."
             );
-
-            if (!client) {
-                console.log("Client not found.");
-                return false;
-            }
-
-            if (charges.some(
-                charge => charge.clientId === client.id
-            )) {
-                console.log(
-                    "It's not possible to remove that client because there are charges associated with it."
-                );
-                return false;
-            }
-
-            break;
-
-
-        default:
-
-            console.log("Invalid operation.");
             return false;
+        }
+
+        if (clients.some(
+            client => client.tif === tif
+        )) {
+            console.log(
+                "There's already a client with that TIF."
+            );
+            return false;
+        }
+
+    } else if (operation === "update") {
+
+        if (!client) {
+            console.log("Client not found.");
+            return false;
+        }
+
+        if (!/^\d{9}$/.test(tif)) {
+            console.log(
+                "TIF must contain exactly 9 digits."
+            );
+            return false;
+        }
+
+        if (clients.some(
+            client =>
+                client.id !== id &&
+                client.tif === tif
+        )) {
+            console.log(
+                "There's already a client with that TIF."
+            );
+            return false;
+        }
+
+    } else if (operation === "remove") {
+
+        if (!client) {
+            console.log("Client not found.");
+            return false;
+        }
+
+        if (charges.some(
+            charge => charge.clientId === client.id
+        )) {
+            console.log(
+                "It's not possible to remove that client because there are charges associated with it."
+            );
+            return false;
+        }
+
+        return true;
+
+    } else {
+
+        console.log("Invalid operation.");
+        return false;
+    }
+
+    // Shared create/update validation
+
+    if (!/^[A-Za-zÀ-ÿ]+$/.test(firstName)) {
+        console.log(
+            "First name can only contain letters."
+        );
+        return false;
+    }
+
+    if (!/^[A-Za-zÀ-ÿ]+$/.test(lastName)) {
+        console.log(
+            "Last name can only contain letters."
+        );
+        return false;
+    }
+
+    if (!validateDOB(DOB)) {
+        return false;
+    }
+
+    if (!validatePhone(
+        phonePrefix,
+        phoneNumber
+    )) {
+        return false;
+    }
+
+    if (!validateLicencePlate(
+        licenceCountry,
+        licencePlate
+    )) {
+        return false;
     }
 
     return true;
@@ -1921,7 +1909,7 @@ function createDataPlan(
     activationFee
 ) {
 
-    name = normalizeName(name);
+    name = normalizeWord(name);
 
     if (!validateDataPlan(
         "create",
@@ -1957,7 +1945,7 @@ function updateDataPlan(
     activationFee
 ) {
 
-    name = normalizeName(name);
+    name = normalizeWord(name);
 
     if (!validateDataPlan(
         "update",
@@ -2010,126 +1998,78 @@ function validateDataPlan(
     activationFee,
 ) {
 
-    switch (operation) {
-
-        case "create":
-
-            if (!/^[A-Za-zÀ-ÿ]+$/.test(name)) {
-                console.log(
-                    "Data plan name must contain only letters and be one word."
-                );
-                return false;
-            }
-
-            if (dataPlans.some(
-                dataPlan => dataPlan.name === name
-            )) {
-                console.log(
-                    "There's already a data plan with that name."
-                );
-                return false;
-            }
-
-            if (isNaN(pricePerKwh) || pricePerKwh <= 0) {
-                console.log(
-                    "Price must be greater than zero."
-                );
-                return false;
-            }
-
-            if (isNaN(activationFee) || activationFee < 0) {
-                console.log(
-                    "Activation fee can't be negative."
-                );
-                return false;
-            }
-
-            break;
-
-
-        case "update":
-
-            if (!Number.isInteger(id) || id <= 0) {
-                console.log(
-                    "ID must be a positive integer."
-                );
-                return false;
-            }
-
-            if (!dataPlans.some(
-                dataPlan => dataPlan.id === id
-            )) {
-                console.log("Data plan not found.");
-                return false;
-            }
-
-            if (!/^[A-Za-zÀ-ÿ]+$/.test(name)) {
-                console.log(
-                    "Data plan name must contain only letters and be one word."
-                );
-                return false;
-            }
-
-            if (dataPlans.some(
-                dataPlan =>
-                    dataPlan.id !== id &&
-                    dataPlan.name === name
-            )) {
-                console.log(
-                    "There's already a data plan with that name."
-                );
-                return false;
-            }
-
-            if (isNaN(pricePerKwh) || pricePerKwh <= 0) {
-                console.log(
-                    "Price must be greater than zero."
-                );
-                return false;
-            }
-
-            if (isNaN(activationFee) || activationFee < 0) {
-                console.log(
-                    "Activation fee can't be negative."
-                );
-                return false;
-            }
-
-            break;
-
-
-        case "remove":
-
-            if (!Number.isInteger(id) || id <= 0) {
-                console.log(
-                    "ID must be a positive integer."
-                );
-                return false;
-            }
-
-            if (!dataPlans.some(
-                dataPlan => dataPlan.id === id
-            )) {
-                console.log("Data plan not found.");
-                return false;
-            }
-
-            if (charges.some(
-                charge => charge.dataPlanId === id
-            )) {
-                console.log(
-                    "It's not possible to remove that data plan because there are charges associated with it."
-                );
-                return false;
-            }
-
-            break;
-
-
-        default:
-
-            console.log("Invalid operation.");
+    if (operation === "create") {
+        if (dataPlans.some(dataPlan => dataPlan.name === name)) {
+            console.log("There's already a data plan with that name.");
             return false;
+        }
+    } else if (operation === "update") {
+        if (!Number.isInteger(id) || id <= 0) {
+            console.log(
+                "ID must be a positive integer."
+            );
+            return false;
+        }
+
+        if (!dataPlans.some(
+            dataPlan => dataPlan.id === id
+        )) {
+            console.log("Data plan not found.");
+            return false;
+        }
+
+        if (dataPlans.some(
+            dataPlan => dataPlan.id !== id && dataPlan.name === name)) {
+            console.log("There's already a data plan with that name.");
+            return false;
+        }
+    } else if (operation === "remove") {
+        if (!Number.isInteger(id) || id <= 0) {
+            console.log(
+                "ID must be a positive integer."
+            );
+            return false;
+        }
+
+        if (!dataPlans.some(
+            dataPlan => dataPlan.id === id
+        )) {
+            console.log("Data plan not found.");
+            return false;
+        }
+
+        if (charges.some(
+            charge => charge.dataPlanId === id
+        )) {
+            console.log(
+                "It's not possible to remove that data plan because there are charges associated with it."
+            );
+            return false;
+        }
+    } else {
+        console.log("Invalid operation.");
+        return false;
+    }
+
+    if (!/^[A-Za-zÀ-ÿ]+$/.test(name)) {
+        console.log(
+            "Data plan name must contain only letters and be one word."
+        );
+        return false;
+    }
+
+    if (isNaN(pricePerKwh) || pricePerKwh <= 0) {
+        console.log(
+            "Price must be greater than zero."
+        );
+        return false;
+    }
+
+    if (isNaN(activationFee) || activationFee < 0) {
+        console.log(
+            "Activation fee can't be negative."
+        );
+        return false;
     }
 
     return true;
@@ -2255,9 +2195,7 @@ function calculateEnergy(
     startDate,
     endDate
 ) {
-    const station = stations.find(
-        station => station.code === stationCode
-    );
+    const station = findStationByCode(stationCode);
 
     if (!station) {
         return null;
@@ -2339,8 +2277,7 @@ function createCharge(
     status
 ) {
 
-    stationCode = stationCode.toUpperCase();
-
+    stationCode = normalizeWord(stationCode);
     clientId = Number(clientId);
     dataPlanId = Number(dataPlanId);
 
@@ -2422,7 +2359,7 @@ function updateCharge(
     status
 ) {
 
-    stationCode = stationCode.toUpperCase();
+    stationCode = normalizeWord(stationCode);
 
     clientId = Number(clientId);
     dataPlanId = Number(dataPlanId);
@@ -2518,17 +2455,19 @@ function validateDate(date) {
 
     // validates the format
 
-    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(date)) {
+    if (!/^\d{4}-\d{2}-\d{2}T(?:[01]\d|2[0-3]):[0-5]\d$/.test(date)) {
         return false;
     }
 
     // validates if the date exists
 
+    const validDate = new Date(date);
+
     if (
-        isNaN(new Date(date).getTime()) ||
-        new Date(date).getFullYear() !== Number(date.substring(0, 4)) ||
-        new Date(date).getMonth() + 1 !== Number(date.substring(5, 7)) ||
-        new Date(date).getDate() !== Number(date.substring(8, 10))
+        isNaN(validDate.getTime()) ||
+        validDate.getFullYear() !== Number(date.substring(0, 4)) ||
+        validDate.getMonth() + 1 !== Number(date.substring(5, 7)) ||
+        validDate.getDate() !== Number(date.substring(8, 10))
     ) {
         return false;
     }
@@ -2545,156 +2484,99 @@ function validateCharge(
     dataPlanId,
     status
 ) {
+    if (operation === "update") {
 
-    switch (operation) {
-
-        case "create":
-
-            if (!stations.some(
-                station => station.code === stationCode
-            )) {
-                console.log("Station not found.");
-                return false;
-            }
-
-            if (!clients.some(
-                client => client.id === clientId
-            )) {
-                console.log("Client not found.");
-                return false;
-            }
-
-            if (!validateDate(startDate)) {
-                console.log("Invalid start date. Use the format YYYY-MM-DDTHH:MM.");
-                return false;
-            }
-
-            if (!chargeStatuses.includes(status)) {
-                console.log("Invalid charge status.");
-                return false;
-            }
-
-            if (status === "in process") {
-
-                if (endDate !== null) {
-                    console.log(
-                        "A charge in process cannot have an end date."
-                    );
-                    return false;
-                }
-
-            } else {
-
-                if (!validateDate(endDate)) {
-                    console.log(
-                        "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
-                    );
-                    return false;
-                }
-
-                if (new Date(endDate) <= new Date(startDate)) {
-                    console.log(
-                        "End date must be after start date."
-                    );
-                    return false;
-                }
-            }
-
-            if (!dataPlans.some(
-                dataPlan => dataPlan.id === dataPlanId
-            )) {
-                console.log("Data plan not found.");
-                return false;
-            }
-
-            break;
-
-
-        case "update":
-
-            if (!charges.some(
-                charge => charge.id === id
-            )) {
-                console.log("Charge not found.");
-                return false;
-            }
-
-            if (!stations.some(
-                station => station.code === stationCode
-            )) {
-                console.log("Station not found.");
-                return false;
-            }
-
-            if (!clients.some(
-                client => client.id === clientId
-            )) {
-                console.log("Client not found.");
-                return false;
-            }
-
-            if (!validateDate(startDate)) {
-                console.log("Invalid start date. Use the format YYYY-MM-DDTHH:MM.");
-                return false;
-            }
-
-            if (!chargeStatuses.includes(status)) {
-                console.log("Invalid charge status.");
-                return false;
-            }
-
-            if (status === "in process") {
-
-                if (endDate !== null) {
-                    console.log(
-                        "A charge in process cannot have an end date."
-                    );
-                    return false;
-                }
-
-            } else {
-
-                if (!validateDate(endDate)) {
-                    console.log(
-                        "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
-                    );
-                    return false;
-                }
-
-                if (new Date(endDate) <= new Date(startDate)) {
-                    console.log(
-                        "End date must be after start date."
-                    );
-                    return false;
-                }
-            }
-
-            if (!dataPlans.some(
-                dataPlan => dataPlan.id === dataPlanId
-            )) {
-                console.log("Data plan not found.");
-                return false;
-            }
-
-            break;
-
-
-        case "remove":
-
-            if (!charges.some(
-                charge => charge.id === id
-            )) {
-                console.log("Charge not found.");
-                return false;
-            }
-
-            break;
-
-
-        default:
-
-            console.log("Invalid option.");
+        if (!charges.some(
+            charge => charge.id === id
+        )) {
+            console.log("Charge not found.");
             return false;
+        }
+
+    } else if (operation === "remove") {
+
+        if (!charges.some(
+            charge => charge.id === id
+        )) {
+            console.log("Charge not found.");
+            return false;
+        }
+
+        return true;
+
+    } else if (operation !== "create") {
+
+        console.log("Invalid operation.");
+        return false;
+    }
+
+    // Shared create/update validation
+
+    if (!stations.some(
+        station => normalizeWord(station.code) === normalizeWord(stationCode)
+    )) {
+        console.log("Station not found.");
+        return false;
+    }
+
+    if (!clients.some(
+        client => client.id === clientId
+    )) {
+        console.log("Client not found.");
+        return false;
+    }
+
+    if (!validateDate(startDate)) {
+        console.log(
+            "Invalid start date. Use the format YYYY-MM-DDTHH:MM."
+        );
+        return false;
+    }
+
+    if (!chargeStatuses.includes(status)) {
+        console.log("Invalid charge status.");
+        return false;
+    }
+
+    if (status === "in process") {
+
+        if (endDate !== null) {
+            console.log(
+                "A charge in process cannot have an end date."
+            );
+            return false;
+        }
+
+    } else {
+
+        if (!validateDate(endDate)) {
+            console.log(
+                "Invalid end date. Use the format YYYY-MM-DDTHH:MM."
+            );
+            return false;
+        }
+
+        if (new Date(endDate) <= new Date(startDate) && status !== "cancelled") {
+            console.log("End date must be after start date.");
+            return false;
+        }
+
+        if (new Date(endDate).getTime() !== new Date(startDate).getTime() && status === "cancelled") {
+            console.log("End date must be the same as start date.");
+            return false;
+        }
+    }
+
+    if (!dataPlans.some(
+        dataPlan => dataPlan.id === dataPlanId
+    )) {
+        console.log("Data plan not found.");
+        return false;
+    }
+
+    if (new Date(startDate) > new Date()) {
+        console.log("Start date cannot be in the future.");
+        return false;
     }
 
     return true;
@@ -3039,7 +2921,7 @@ function showMainMenu() {
 function getChargesByStatus(status) {
 
     return charges.filter(
-        charge => normalize(charge.status) === normalize(status)
+        charge => normalizeValue(charge.status) === normalizeValue(status)
     );
 }
 
@@ -3047,24 +2929,16 @@ function getChargesByStatus(status) {
 
 function findStationByCode(code) {
 
-    code = code.toUpperCase();
-
     return stations.find(
         station =>
-            station.code === code
+            normalizeWord(station.code) === normalizeWord(code)
     );
 };
 
 // function that finds clients by TIF
 
 function findClientByTIF(tif) {
-    tif = normalizeTIF(tif);
-
-    return clients.find(
-        client =>
-            client.tif === tif
-
-    );
+    return clients.find(client => normalizeValue(client.tif) === normalizeValue(tif));
 };
 
 //function that calculates age
@@ -3291,19 +3165,14 @@ function showChargesByClientMenu() {
 
     // check if the client exists
 
-    const normalizedTif = normalizeTIF(clientTif);
-
-    const client =
-        clients.find(
-            client => client.tif === normalizedTif
-        );
+    const client = findClientByTIF(clientTif);
 
     if (!client) {
         console.log("Client not found.");
         return;
     }
 
-    // check the satus 
+    // check the status 
 
     const status = showStatusReportMenu();
 
@@ -3313,7 +3182,7 @@ function showChargesByClientMenu() {
 
     const report =
         reportChargesByClient(
-            normalizedTif,
+            clientTif,
             status
         );
 
