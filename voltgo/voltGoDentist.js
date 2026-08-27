@@ -761,6 +761,7 @@ const stations = [
         fastPower: 100,
         connectorType: "MJG",
         status: "active",
+        lastMaintenance: "2026-08-26T16:00"
     },
     {
         id: 2,
@@ -771,6 +772,7 @@ const stations = [
         fastPower: 100,
         connectorType: "DSG",
         status: "under maintenance",
+        lastMaintenance: "2026-08-10T09:00"
     },
     {
         id: 3,
@@ -781,6 +783,7 @@ const stations = [
         fastPower: 100,
         connectorType: "MJG",
         status: "active",
+        lastMaintenance: "2026-08-02T11:00"
     },
     {
         id: 4,
@@ -791,6 +794,7 @@ const stations = [
         fastPower: 100,
         connectorType: "MGS",
         status: "active",
+        lastMaintenance: "2026-08-20T14:00"
     }
 ];
 
@@ -2130,7 +2134,7 @@ function showTariffsMenu() {
                 const updateName =
                     input("Tariff name: ");
 
-                const updateChargeType = input("Charge type (standard/fast): ")
+                const updateChargeType = input("Charge type (standard/fast): ");
 
                 const updatePricePerKwh = Number(
                     input("Price per kWh: ")
