@@ -387,6 +387,11 @@ const chargeStatuses = [
     "cancelled"
 ];
 
+const chargeTypes = [
+    "standard",
+    "fast"
+];
+
 const countryPrefixes = [
     { prefix: "+1", regex: /^\d{10}$/ }, // United States, Canada
     { prefix: "+7", regex: /^\d{10}$/ }, // Russia, Kazakhstan
@@ -825,13 +830,15 @@ const inactiveClients = [];
 const tariffs = [
     {
         id: 1,
-        name: "Standard",
+        name: "Normal",
+        chargeType: "standard",
         pricePerKwh: 0.35,
         activationFee: 0.50,
     },
     {
         id: 2,
-        name: "Fast",
+        name: "Premium",
+        chargeType: "fast",
         pricePerKwh: 0.65,
         activationFee: 1.00,
     },
@@ -1865,7 +1872,7 @@ function showTariffs() {
         return;
     }
 
-    console.log("\nID | Name | Price/kWh | Activation fee");
+    console.log("\nID | Name | Charge Type | Price/kWh | Activation fee");
 
     console.log(
         "---------------------------------------------------------------------"
@@ -1874,7 +1881,7 @@ function showTariffs() {
     for (const tariff of tariffs) {
 
         console.log(
-            `${tariff.id} | ${tariff.name} | ${tariff.pricePerKwh} € | ${tariff.activationFee} €`
+            `${tariff.id} | ${tariff.name} | ${tariff.chargeType} | ${tariff.pricePerKwh} € | ${tariff.activationFee} €`
         );
 
     }
@@ -1882,6 +1889,7 @@ function showTariffs() {
 
 function createTariff(
     name,
+    chargeType,
     pricePerKwh,
     activationFee
 ) {
@@ -1892,18 +1900,19 @@ function createTariff(
         "create",
         null,
         name,
+        chargeType,
         pricePerKwh,
         activationFee
     )) {
         return;
     }
 
+    const validChargeType = getValidValue(chargeType, chargeTypes);
+
     const newTariff = {
-        id: getNextId(
-            tariffs,
-            inactiveTariffs
-        ),
+        id: getNextId(tariffs, inactiveTariffs),
         name: name,
+        chargeType: validChargeType,
         pricePerKwh: pricePerKwh,
         activationFee: activationFee,
     };
@@ -1918,6 +1927,7 @@ function createTariff(
 function updateTariff(
     id,
     name,
+    chargeType,
     pricePerKwh,
     activationFee
 ) {
@@ -1928,17 +1938,19 @@ function updateTariff(
         "update",
         id,
         name,
+        chargeType,
         pricePerKwh,
         activationFee
     )) {
         return;
     }
 
-    const tariff = tariffs.find(
-        tariff => tariff.id === id
-    );
+    const tariff = tariffs.find(tariff => tariff.id === id);
+
+    const validChargeType = getValidValue(chargeType, chargeTypes);
 
     tariff.name = name;
+    tariff.chargeType = validChargeType;
     tariff.pricePerKwh = pricePerKwh;
     tariff.activationFee = activationFee;
 
@@ -1971,6 +1983,7 @@ function validateTariff(
     operation,
     id,
     name,
+    chargeType,
     pricePerKwh,
     activationFee,
 ) {
@@ -2035,6 +2048,11 @@ function validateTariff(
         return false;
     }
 
+    if (!getValidValue(chargeType, chargeTypes)) {
+        console.log("Charge type must be 'standard' or 'fast'.");
+        return false;
+    }
+
     if (isNaN(pricePerKwh) || pricePerKwh <= 0) {
         console.log(
             "Price must be greater than zero."
@@ -2080,6 +2098,8 @@ function showTariffsMenu() {
                 const name =
                     input("Tariff name: ");
 
+                const chargeType = input("Charge type (standard/fast): ");
+
                 const pricePerKwh = Number(
                     input("Price per kWh: ")
                         .replace(",", ".")
@@ -2092,6 +2112,7 @@ function showTariffsMenu() {
 
                 createTariff(
                     name,
+                    chargeType,
                     pricePerKwh,
                     activationFee
                 );
@@ -2107,6 +2128,8 @@ function showTariffsMenu() {
                 const updateName =
                     input("Tariff name: ");
 
+                const updateChargeType = input("Charge type (standard/fast): ")
+
                 const updatePricePerKwh = Number(
                     input("Price per kWh: ")
                         .replace(",", ".")
@@ -2120,6 +2143,7 @@ function showTariffsMenu() {
                 updateTariff(
                     updateTariffId,
                     updateName,
+                    updateChargeType,
                     updatePricePerKwh,
                     updateActivationFee
                 );
@@ -2169,6 +2193,7 @@ function calculateDuration(startDate, endDate) {
 // Function to calculate energy
 function calculateEnergy(
     stationCode,
+    tariffId,
     startDate,
     endDate
 ) {
@@ -2182,10 +2207,17 @@ function calculateEnergy(
         return null;
     }
 
-    const durationInHours = calculateDuration(startDate, endDate)
+    const tariff = tariffs.find(tariff => tariff.id === tariffId);
 
-    const energy =
-        station.power * durationInHours;
+    if (!tariff) {
+        return null;
+    }
+
+    const durationInHours = calculateDuration(startDate, endDate);
+
+    const power = tariff.chargeType === "fast" ? station.fastPower : station.standardPower;
+
+    const energy = power * durationInHours;
 
     return Number(energy.toFixed(2));
 }
@@ -2292,6 +2324,7 @@ function createCharge(
     const energy =
         calculateEnergy(
             stationCode,
+            tariffId,
             startDate,
             endDate
         );
@@ -2369,6 +2402,7 @@ function updateCharge(
     const energy =
         calculateEnergy(
             stationCode,
+            tariffId,
             startDate,
             endDate
         );
