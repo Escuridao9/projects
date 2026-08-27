@@ -809,6 +809,7 @@ const clients = [
         phoneNumber: "+351916291322",
         licenceCountry: "Portugal",
         licencePlate: "AA-21-BB",
+        points: 7
     },
     {
         id: 2,
@@ -819,6 +820,7 @@ const clients = [
         phoneNumber: "+351915439865",
         licenceCountry: "Portugal",
         licencePlate: "GH-45-AC",
+        points: 0
     },
 ];
 
@@ -1445,7 +1447,7 @@ function showClients() {
     }
 
     console.log(
-        "\nID | TIF | Name | Date of Birth | Phone | Licence Plate"
+        "\nID | TIF | Name | Date of Birth | Phone | Licence Plate | Points"
     );
 
     console.log(
@@ -1455,7 +1457,7 @@ function showClients() {
     for (const client of clients) {
 
         console.log(
-            `${client.id} | ${client.tif} | ${client.firstName} ${client.lastName} | ${client.dob} | ${client.phoneNumber} | ${client.licenceCountry}: ${client.licencePlate}`
+            `${client.id} | ${client.tif} | ${client.firstName} ${client.lastName} | ${client.dob} | ${client.phoneNumber} | ${client.licenceCountry}: ${client.licencePlate} | ${client.points}`
         );
 
     }
@@ -2226,7 +2228,8 @@ function calculateEnergy(
 // Function to calculate cost
 function calculateCost(
     energy,
-    tariffId
+    tariffId,
+    power
 ) {
     if (energy === null) {
         return null;
@@ -2241,7 +2244,7 @@ function calculateCost(
     }
 
     const cost =
-        energy * tariff.pricePerKwh +
+        (energy * tariff.pricePerKwh * (power / 100)) +
         tariff.activationFee;
 
     return Number(cost.toFixed(2));
@@ -2329,12 +2332,24 @@ function createCharge(
             endDate
         );
 
+    const station = findStationByCode(stationCode);
+    const tariff = tariffs.find(tariff => tariff.id === tariffId);
+    const power = tariff.chargeType === "fast" ? station.fastPower : station.standardPower;
+
     // Calculate cost
-    const cost =
-        calculateCost(
+    const cost = validStatus === "cancelled"
+        ? 0
+        : calculateCost(
             energy,
-            tariffId
+            tariffId,
+            power
         );
+
+    if (validStatus === "invoiced") {
+        const client = clients.find(client => client.id === clientId);
+        const pointsMultiplier = tariff.chargeType === "fast" ? 2 : 1;
+        client.points += Math.floor(cost * pointsMultiplier);
+    }
 
     const newCharge = {
         id: id,
@@ -2407,11 +2422,17 @@ function updateCharge(
             endDate
         );
 
+    const station = findStationByCode(stationCode);
+    const tariff = tariffs.find(tariff => tariff.id === tariffId);
+    const power = tariff.chargeType === "fast" ? station.fastPower : station.standardPower;
+
     // Recalculate cost
-    const cost =
-        calculateCost(
+    const cost = validStatus === "cancelled"
+        ? 0
+        : calculateCost(
             energy,
-            tariffId
+            tariffId,
+            power
         );
 
     const charge = charges.find(
