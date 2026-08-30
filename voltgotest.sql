@@ -81,6 +81,7 @@ CREATE TABLE [tariff]
 (
     [id_tariff] INT IDENTITY(1,1),
     [name] VARCHAR(50) NOT NULL,
+    [version] INT NOT NULL DEFAULT 1,
     [charge_type] VARCHAR(20) NOT NULL,
     [price] DECIMAL(4,2) NOT NULL,
     [activation_fee] DECIMAL (4,2) NULL,
@@ -90,6 +91,8 @@ CREATE TABLE [tariff]
 
     CONSTRAINT PK_tariff PRIMARY KEY ([id_tariff]),
     CONSTRAINT CHK_tariff_name CHECK ([name] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
+    CONSTRAINT UQ_tariff_name_version UNIQUE ([name], [version]),
+    CONSTRAINT CHK_tariff_version CHECK ([version] >= 1),
     CONSTRAINT CHK_tariff_charge_type CHECK ([charge_type] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
     CONSTRAINT CHK_tariff_price CHECK ([price] > 0),
     CONSTRAINT CHK_tariff_activation_fee CHECK ([activation_fee] IS NULL OR [activation_fee] >= 0),
@@ -101,7 +104,7 @@ CREATE TABLE [tariff]
 );
 GO
 
--- nome único apenas para tarifas ativas (não podemos por unique em cima)
+-- para garantir que apenas 1 versão ativa por nome de tarifa)
 CREATE UNIQUE INDEX UQ_active_tariff_name 
 ON [tariff]([name]) 
 WHERE [active] = 1;
@@ -162,16 +165,13 @@ CREATE TABLE [client] (
     
     -- Empresa (sex 'N'): null, Particular: obrigatoriamente preenchido (F, M, Other) 
     CONSTRAINT CHK_client_type_coherence CHECK (
-        ([type] = 'empresa' AND [sex] = 'N' AND [dob] IS NULL) OR
-        ([type] = 'particular' AND [sex] IN ('M', 'F', 'O') AND [dob] IS NOT NULL AND [dob] <= DATEADD(YEAR, -18, GETDATE()))
-    ),
+        ([type] = 'company' AND [sex] = 'N' AND [dob] IS NULL) OR
+        ([type] = 'individual' AND [sex] IN ('M', 'F', 'O') AND [dob] IS NOT NULL)),
     
-    CONSTRAINT CHK_client_registration_date CHECK ([registration_date] <= GETDATE()),
     CONSTRAINT CHK_client_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
     CONSTRAINT CHK_client_status_cessation CHECK (
         ([active] = 1 AND [cessation_date] IS NULL) OR
-        ([active] = 0 AND [cessation_date] IS NOT NULL) 
-        )
+        ([active] = 0 AND [cessation_date] IS NOT NULL))
 );
 GO
 
@@ -214,7 +214,7 @@ CREATE TABLE [vehicle]
     CONSTRAINT CHK_vehicle_licence_plate CHECK ([licence_plate] NOT LIKE '%[^a-zA-Z0-9 -]%'),
     CONSTRAINT CHK_vehicle_country_chars CHECK ([country] NOT LIKE '%[^a-zA-Z ]%'),
     CONSTRAINT CHK_vehicle_country_first_upper CHECK (LEFT([country], 1) COLLATE Latin1_General_CS_AS LIKE '[A-Z]'),
-    CONSTRAINT CHK_vehicle_year CHECK ([year] >= 1900 AND [year] <= YEAR(GETDATE())),
+    CONSTRAINT CHK_vehicle_year CHECK ([year] >= 1990),
     CONSTRAINT CHK_vehicle_brand_chars CHECK ([brand] NOT LIKE '%[^a-zA-Z0-9 -]%')
 );
 GO
@@ -259,7 +259,6 @@ CREATE TABLE [reservation]
     CONSTRAINT FK_reservation_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
     CONSTRAINT CHK_reservation_end_date_after_start_date CHECK ([end_date_hour] > [start_date_hour]),
     CONSTRAINT CHK_reservation_registration CHECK ([start_date_hour] >= [registration_date]),
-    CONSTRAINT CHK_reservation_registration_past CHECK ([registration_date] <= GETDATE()),
     CONSTRAINT CHK_reservation_status CHECK ([status] IN ('active', 'completed', 'cancelled', 'expired'))
 );
 GO
@@ -301,6 +300,13 @@ CREATE TABLE [charge_session]
 );
 GO
 
+-- garante que cada reserva só pode ser associada a NO MÁXIMO 1 carregamento 
+-- não pode estar no create pois, se uma reservation = NULL, não poderia haver mais nenhuma reservation = NULL
+CREATE UNIQUE NONCLUSTERED INDEX UQ_charge_session_reservation 
+ON [charge_session]([id_reservation]) 
+WHERE [id_reservation] IS NOT NULL;
+GO
+
 --TABELAS FINANCEIRAS E HISTORICOS
 
 CREATE TABLE [payment] 
@@ -323,7 +329,6 @@ CREATE TABLE [payment]
         [method] IS NULL OR 
         [method] IN ('mb way', 'credit card', 'debit card', 'direct debit', 'bank transfer', 'cash')),
     CONSTRAINT CHK_payment_frequency CHECK ([frequency] IN ('immediate', 'monthly')),
-    CONSTRAINT CHK_payment_invoice_date CHECK ([invoice_date] <= CAST(GETDATE() AS DATE)),
     CONSTRAINT CHK_payment_deadline CHECK ([payment_deadline] >= [invoice_date]),
     CONSTRAINT CHK_payment_status_coherence CHECK (
         ([status] = 'paid' AND [paid_amount] = [invoiced_amount]) OR

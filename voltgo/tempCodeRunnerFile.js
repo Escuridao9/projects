@@ -1,0 +1,19 @@
+
+        "Almodôvar",
+        "Alvito",
+        "Barrancos",
+        "Beja",
+        "Castro Verde",
+        "Cuba",
+        "Ferreira do Alentejo",
+        "Mértola",
+        "Moura",
+        "Odemira",
+        "Ourique",
+        "Serpa",
+        "Vidigueira"
+    ],
+
+    "Braga": [
+        "Amares",
+        "Barcelos",
