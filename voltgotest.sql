@@ -345,15 +345,15 @@ CREATE TABLE [station_records]
     [id_station_record] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
     [field_changed] VARCHAR(50) NOT NULL,
-    [previous_value] VARCHAR(20) NOT NULL,
-    [new_value] VARCHAR(20) NOT NULL,
+    [previous_value] VARCHAR(250) NOT NULL,
+    [new_value] VARCHAR(250) NOT NULL,
     [modification_date] DATETIME NOT NULL DEFAULT GETDATE(),
     [observations] VARCHAR(250) NULL,
 
     CONSTRAINT PK_station_records PRIMARY KEY ([id_station_record]),
     CONSTRAINT FK_stationrecords_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
-    CONSTRAINT CHK_station_records_mod_date CHECK ([modification_date] <= GETDATE())
-
+    CONSTRAINT CHK_station_records_field CHECK (TRIM([field_changed]) <> ''),
+    CONSTRAINT CHK_station_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
 );
 GO
 
@@ -369,8 +369,9 @@ CREATE TABLE [client_records]
 
     CONSTRAINT PK_client_records PRIMARY KEY ([id_client_record]),
     CONSTRAINT FK_client_records_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
-    CONSTRAINT CHK_client_records CHECK ([modification_date] <= GETDATE()) 
-);
+    CONSTRAINT CHK_client_records_field CHECK (TRIM([field_changed]) <> ''),
+    CONSTRAINT CHK_client_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
+    );
 GO
 
 CREATE TABLE [tariff_records]
@@ -385,8 +386,8 @@ CREATE TABLE [tariff_records]
 
     CONSTRAINT PK_tariff_records PRIMARY KEY ([id_tariff_record]),
     CONSTRAINT FK_tariff_records_tariff FOREIGN KEY ([id_tariff]) REFERENCES [tariff]([id_tariff]),
-    CONSTRAINT CHK_tariff_records_mod_date CHECK ([modification_date] <= GETDATE())
-
+    CONSTRAINT CHK_tariff_records_field CHECK (TRIM([field_changed]) <> ''),
+    CONSTRAINT CHK_tariff_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
 );
 GO
 
@@ -402,8 +403,9 @@ CREATE TABLE [charge_session_records]
 
     CONSTRAINT PK_charge_session_records PRIMARY KEY ([id_charge_record]),
     CONSTRAINT FK_charge_session_records_charge_session FOREIGN KEY ([id_charge]) REFERENCES [charge_session]([id_charge]),
-    CONSTRAINT CHK_charge_session_records_mod_date CHECK ([modification_date] <= GETDATE()),
-);
+    CONSTRAINT CHK_charge_session_records_field CHECK (TRIM([field_changed]) <> ''),
+    CONSTRAINT CHK_charge_session_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
+    );
 GO
 
 CREATE TABLE [payment_records] 
@@ -418,7 +420,8 @@ CREATE TABLE [payment_records]
 
     CONSTRAINT PK_payment_records PRIMARY KEY ([id_payment_record]),
     CONSTRAINT FK_payment_records_payment FOREIGN KEY ([id_payment]) REFERENCES [payment]([id_payment]),
-    CONSTRAINT CHK_payment_records_mod_date CHECK ([modification_date] <= GETDATE()),
+    CONSTRAINT CHK_payment_records_field CHECK (TRIM([field_changed]) <> ''),
+    CONSTRAINT CHK_payment_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
 );
 GO
 
@@ -434,7 +437,7 @@ CREATE TABLE [maintenance_records]
 
     CONSTRAINT PK_maintenance_records PRIMARY KEY ([id_maintenance_record]),
     CONSTRAINT FK_maintenancerecords_maintenance FOREIGN KEY ([id_maintenance]) REFERENCES [maintenance]([id_maintenance]),
-    CONSTRAINT CHK_maintenance_records_mod_date CHECK ([modification_date] <= GETDATE())
-
+    CONSTRAINT CHK_maintenance_records_field CHECK (TRIM([field_changed]) <> ''),
+    CONSTRAINT CHK_maintenance_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
 );
 GO
