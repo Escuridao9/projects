@@ -18,7 +18,7 @@ GO
 -- limpeza preventiva (apaga antigas se voltar a executar)
 DROP TABLE IF EXISTS [payment_records];
 DROP TABLE IF EXISTS [charge_session_records];
-DROP TABLE IF EXISTS [clients_records];
+DROP TABLE IF EXISTS [client_records];
 DROP TABLE IF EXISTS [tariff_records];
 DROP TABLE IF EXISTS [maintenance_records];
 DROP TABLE IF EXISTS [station_records];
@@ -45,7 +45,8 @@ CREATE TABLE [municipality]
     [name] VARCHAR(100) NOT NULL,
 
     CONSTRAINT PK_municipality PRIMARY KEY ([id_municipality]),
-    CONSTRAINT UQ_municipality_name UNIQUE ([name])
+    CONSTRAINT UQ_municipality_name UNIQUE ([name]),
+    CONSTRAINT CHK_municipality_name CHECK (TRIM([name]) <> '')
 );
 GO
 
@@ -57,9 +58,10 @@ CREATE TABLE [connector]
 
     CONSTRAINT PK_connector PRIMARY KEY ([id_connector]),
     CONSTRAINT UQ_connector_name UNIQUE ([name]),
-    CONSTRAINT CHK_connector_name_upper CHECK ([name] NOT LIKE '%[^A-Z ]%' COLLATE Latin1_General_CS_AS),
-    -- permitir null ou aceitar tudo com acentos e cedilhas (menos strings vazias)
-    CONSTRAINT CHK_connector_description CHECK ([description] IS NULL OR LTRIM(RTRIM([description])) <> '')
+    -- garante 3 letras maiusculas
+    CONSTRAINT CHK_connector_name_upper CHECK ([name] COLLATE Latin1_General_CS_AS LIKE '[A-Z][A-Z][A-Z]'),
+    -- tirar os espaços do início e do fim e impede string vazia
+    CONSTRAINT CHK_connector_description CHECK ([description] IS NULL OR TRIM([description]) <> '')
 );
 GO
 
@@ -71,9 +73,8 @@ CREATE TABLE [role]
 
     CONSTRAINT PK_role PRIMARY KEY ([id_role]),
     CONSTRAINT UQ_role_name UNIQUE ([name]),
-    CONSTRAINT CHK_role_name CHECK ([name] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
-    CONSTRAINT CHK_role_observations CHECK ([observations] IS NULL OR LTRIM(RTRIM([observations])) <> '')
-
+    CONSTRAINT CHK_role_name CHECK (TRIM([name]) <> ''),
+    CONSTRAINT CHK_role_observations CHECK ([observations] IS NULL OR TRIM([observations]) <> '')
     );
 GO
 
@@ -90,10 +91,10 @@ CREATE TABLE [tariff]
     [cessation_date] DATETIME NULL,
 
     CONSTRAINT PK_tariff PRIMARY KEY ([id_tariff]),
-    CONSTRAINT CHK_tariff_name CHECK ([name] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
     CONSTRAINT UQ_tariff_name_version UNIQUE ([name], [version]),
+    CONSTRAINT CHK_tariff_name CHECK (LEFT([name], 1) COLLATE Latin1_General_CS_AI LIKE '[A-ZÀ-Ü]' AND TRIM([name]) <> ''),    
     CONSTRAINT CHK_tariff_version CHECK ([version] >= 1),
-    CONSTRAINT CHK_tariff_charge_type CHECK ([charge_type] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
+    CONSTRAINT CHK_tariff_charge_type CHECK (TRIM([charge_type]) <> ''),
     CONSTRAINT CHK_tariff_price CHECK ([price] > 0),
     CONSTRAINT CHK_tariff_activation_fee CHECK ([activation_fee] IS NULL OR [activation_fee] >= 0),
     CONSTRAINT CHK_tariff_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
@@ -114,16 +115,16 @@ GO
 
 CREATE TABLE [station] (
     [id_station] INT IDENTITY(1,1),
-    [code] CHAR(4) NOT NULL,
     [id_municipality] INT NOT NULL,
+    [code] CHAR(4) NOT NULL,
     [power] DECIMAL(5,2) NOT NULL,
     [active] BIT NOT NULL DEFAULT 1,
     [registration_date] DATETIME NOT NULL DEFAULT GETDATE(),
     [cessation_date] DATETIME NULL,
 
     CONSTRAINT PK_station PRIMARY KEY ([id_station]),
-    CONSTRAINT UQ_station_code UNIQUE ([code]),
     CONSTRAINT FK_station_municipality FOREIGN KEY ([id_municipality]) REFERENCES [municipality]([id_municipality]),
+    CONSTRAINT UQ_station_code UNIQUE ([code]),
     CONSTRAINT CHK_station_code CHECK ([code] COLLATE Latin1_General_CS_AS LIKE 'S[0-9][0-9][0-9]'),
     CONSTRAINT CHK_station_power CHECK ([power] > 0),
     CONSTRAINT CHK_station_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
@@ -151,23 +152,23 @@ CREATE TABLE [client] (
     CONSTRAINT PK_client PRIMARY KEY ([id_client]),  
     CONSTRAINT UQ_client_tif UNIQUE ([tif]),
     CONSTRAINT UQ_client_email UNIQUE ([email]),
-
-    -- Primeira letra maiuscula e apenas letras/espacos no restante
-    CONSTRAINT CHK_client_first_name_upper CHECK (LEFT([first_name], 1) COLLATE Latin1_General_CS_AI LIKE '[A-Z]'),
-    CONSTRAINT CHK_client_first_name_chars CHECK ([first_name] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
-
-    -- Primeira letra maiuscula e apenas letras/espacos/pontos no restante (para S.A. / Lda.)
-    CONSTRAINT CHK_client_last_name_upper CHECK (LEFT([last_name], 1) COLLATE Latin1_General_CS_AI LIKE '[A-Z]'),
-    CONSTRAINT CHK_client_last_name_chars CHECK ([last_name] NOT LIKE '%[^a-z .]%' COLLATE Latin1_General_CI_AI),
-
-    CONSTRAINT CHK_client_tif_chars CHECK ([tif] NOT LIKE '%[^0-9]%'),
+    -- primeira letra maiuscula e apenas letras/espacos no restante
+    CONSTRAINT CHK_client_first_name_upper CHECK (LEFT([first_name], 1) COLLATE Latin1_General_CS_AS LIKE '[A-ZÀ-Ü]'),
+    CONSTRAINT CHK_client_first_name_chars CHECK ([first_name] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Zà-üÀ-ÜçÇ -]%'),
+    -- primeira letra maiuscula e apenas letras/espacos/pontos/traços no restante (para S.A. / Lda.)
+    CONSTRAINT CHK_client_last_name_upper CHECK (LEFT([last_name], 1) COLLATE Latin1_General_CS_AS LIKE '[A-ZÀ-Ü]'),
+    CONSTRAINT CHK_client_last_name_chars CHECK ([last_name] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Zà-üÀ-ÜçÇ .-]%'),
+    CONSTRAINT CHK_client_tif CHECK ([tif] LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
+    CONSTRAINT CHK_client_sex CHECK ([sex] IN ('M', 'F', 'O', 'N')),
+    CONSTRAINT CHK_client_dob CHECK ([dob] >= '1900-01-01'),
+    -- evita que seja uma string vazia
+    CONSTRAINT CHK_client_address CHECK (TRIM([address]) <> ''),
+    CONSTRAINT CHK_client_email CHECK ([email] LIKE '%_@_%._%'),
     CONSTRAINT CHK_client_type CHECK ([type] IN ('individual', 'company')),
-    
-    -- Empresa (sex 'N'): null, Particular: obrigatoriamente preenchido (F, M, Other) 
-    CONSTRAINT CHK_client_type_coherence CHECK (
+    -- empresa (sex 'N'): null; particular: obrigatoriamente preenchido (F, M, Other) 
+    CONSTRAINT CHK_client_type_sex_coherence CHECK (
         ([type] = 'company' AND [sex] = 'N' AND [dob] IS NULL) OR
         ([type] = 'individual' AND [sex] IN ('M', 'F', 'O') AND [dob] IS NOT NULL)),
-    
     CONSTRAINT CHK_client_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
     CONSTRAINT CHK_client_status_cessation CHECK (
         ([active] = 1 AND [cessation_date] IS NULL) OR
@@ -211,12 +212,12 @@ CREATE TABLE [vehicle]
     CONSTRAINT PK_vehicle PRIMARY KEY ([id_vehicle]),
     CONSTRAINT FK_vehicle_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
     CONSTRAINT UQ_vehicle_licence_plate UNIQUE ([licence_plate]),
-    CONSTRAINT CHK_vehicle_licence_plate CHECK ([licence_plate] NOT LIKE '%[^a-zA-Z0-9 -]%'),
-    CONSTRAINT CHK_vehicle_country_chars CHECK ([country] NOT LIKE '%[^a-zA-Z ]%'),
-    CONSTRAINT CHK_vehicle_country_first_upper CHECK (LEFT([country], 1) COLLATE Latin1_General_CS_AS LIKE '[A-Z]'),
+    CONSTRAINT CHK_vehicle_licence_plate CHECK (TRIM([licence_plate]) <> '' AND [licence_plate] COLLATE Latin1_General_CS_AS NOT LIKE '%[^A-Z0-9 -]%'),    
+    CONSTRAINT CHK_vehicle_country_first_upper CHECK (LEFT([country], 1) COLLATE Latin1_General_CS_AS LIKE '[A-ZÀ-Ü]'),
+    CONSTRAINT CHK_vehicle_country_chars CHECK (TRIM([country]) <> '' AND [country] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Zà-üÀ-Ü -]%'),
     CONSTRAINT CHK_vehicle_year CHECK ([year] >= 1990),
-    CONSTRAINT CHK_vehicle_brand_chars CHECK ([brand] NOT LIKE '%[^a-zA-Z0-9 -]%')
-);
+    CONSTRAINT CHK_vehicle_brand CHECK (TRIM([brand]) <> '' AND [brand] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Z0-9à-üÀ-Ü -]%')
+    );
 GO
 
 CREATE TABLE [maintenance] 
@@ -232,9 +233,8 @@ CREATE TABLE [maintenance]
 
     CONSTRAINT PK_maintenance PRIMARY KEY ([id_maintenance]),
     CONSTRAINT FK_maintenance_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
-    CONSTRAINT CHK_maintenance_type_chars CHECK ([type] NOT LIKE '%[^a-z ]%' COLLATE Latin1_General_CI_AI),
-    CONSTRAINT CHK_maintenance_description CHECK ([description] IS NULL OR LTRIM(RTRIM([description])) <> ''),
-    
+    CONSTRAINT CHK_maintenance_type CHECK (TRIM([type]) <> '' AND [type] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Zà-üÀ-Ü -]%'),
+    CONSTRAINT CHK_maintenance_description CHECK ([description] IS NULL OR TRIM([description]) <> ''),    
     CONSTRAINT CHK_maintenance_status CHECK ([status] IN ('open', 'in process', 'resolved')),
     CONSTRAINT CHK_maintenance_status_coherence CHECK (
         ([status] IN ('open', 'in process') AND [end_date] IS NULL AND [cost] IS NULL) OR
@@ -249,6 +249,7 @@ CREATE TABLE [reservation]
     [id_reservation] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
     [id_station] INT NOT NULL,
+    [id_connector] INT NOT NULL,
     [registration_date] DATETIME NOT NULL DEFAULT GETDATE(),
     [start_date_hour] DATETIME NOT NULL,
     [end_date_hour] DATETIME NOT NULL,
@@ -256,9 +257,10 @@ CREATE TABLE [reservation]
 
     CONSTRAINT PK_reservation PRIMARY KEY ([id_reservation]),
     CONSTRAINT FK_reservation_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
-    CONSTRAINT FK_reservation_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
+    CONSTRAINT FK_reservation_station_connector FOREIGN KEY ([id_station], [id_connector]) REFERENCES [station_connector]([id_station], [id_connector]),
     CONSTRAINT CHK_reservation_end_date_after_start_date CHECK ([end_date_hour] > [start_date_hour]),
-    CONSTRAINT CHK_reservation_registration CHECK ([start_date_hour] >= [registration_date]),
+    -- damos uma tolerância de 1 minuto na star_date (para evitar erros com os milisegundos)
+    CONSTRAINT CHK_reservation_registration CHECK ([start_date_hour] >= DATEADD(MINUTE, -1, [registration_date])),
     CONSTRAINT CHK_reservation_status CHECK ([status] IN ('active', 'completed', 'cancelled', 'expired'))
 );
 GO
@@ -269,11 +271,11 @@ CREATE TABLE [charge_session]
 (
     [id_charge] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
+    [id_connector] INT NOT NULL,
     [id_client] INT NOT NULL,
     [id_driver] INT NOT NULL,
     [id_vehicle] INT NOT NULL,
     [id_tariff] INT NOT NULL,
-    [id_connector] INT NOT NULL,
     [id_reservation] INT NULL,
     [start_date_hour] DATETIME NOT NULL DEFAULT GETDATE(),
     [end_date_hour] DATETIME NULL,
@@ -281,15 +283,15 @@ CREATE TABLE [charge_session]
     [status] VARCHAR(20) NOT NULL,
 
     CONSTRAINT PK_charge_session PRIMARY KEY ([id_charge]),
-    CONSTRAINT FK_charge_session_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
+    CONSTRAINT FK_charge_session_station_connector FOREIGN KEY ([id_station], [id_connector]) REFERENCES [station_connector]([id_station], [id_connector]),
     CONSTRAINT FK_charge_session_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
     CONSTRAINT FK_charge_session_driver FOREIGN KEY ([id_driver]) REFERENCES [client]([id_client]),
     CONSTRAINT FK_charge_session_vehicle FOREIGN KEY ([id_vehicle]) REFERENCES [vehicle]([id_vehicle]),
     CONSTRAINT FK_charge_session_tariff FOREIGN KEY ([id_tariff]) REFERENCES [tariff]([id_tariff]),
-    CONSTRAINT FK_charge_session_connector FOREIGN KEY ([id_connector]) REFERENCES [connector]([id_connector]),
     CONSTRAINT FK_charge_session_reservation FOREIGN KEY ([id_reservation]) REFERENCES [reservation]([id_reservation]),
     CONSTRAINT CHK_charge_session_end_date CHECK ([end_date_hour] IS NULL OR [end_date_hour] >= [start_date_hour]),
     CONSTRAINT CHK_charge_session_energy CHECK ([energy] IS NULL OR [energy] >= 0),
+    CONSTRAINT CHK_charge_session_status CHECK ([status] IN ('in progress', 'terminated', 'invoiced', 'cancelled')),
     CONSTRAINT CHK_charge_session_status_coherence CHECK (
     -- "in process" - obrigatoriamente nao tem end_date nem energy
     ([status] = 'in progress' AND [end_date_hour] IS NULL AND [energy] IS NULL) OR 
@@ -318,8 +320,8 @@ CREATE TABLE [payment]
     [method] VARCHAR(30) NULL,
     [frequency] VARCHAR(30) NOT NULL,
     [status] VARCHAR(20) NOT NULL,
-    [invoice_date] DATE NOT NULL DEFAULT GETDATE(),
-    [payment_deadline] DATE NOT NULL DEFAULT DATEADD(DAY, 30, GETDATE()), -- default é 30 dias a partir da invoice_date
+    [invoice_date] DATE NOT NULL DEFAULT CONVERT(DATE, GETDATE()),
+    [payment_deadline] DATE NOT NULL DEFAULT CONVERT(DATE, DATEADD(DAY, 30, GETDATE())), -- default é 30 dias a partir da invoice_date
 
     CONSTRAINT PK_payment PRIMARY KEY ([id_payment]),
     CONSTRAINT FK_payment_charge_session FOREIGN KEY ([id_charge]) REFERENCES [charge_session]([id_charge]),
@@ -331,9 +333,10 @@ CREATE TABLE [payment]
     CONSTRAINT CHK_payment_frequency CHECK ([frequency] IN ('immediate', 'monthly')),
     CONSTRAINT CHK_payment_deadline CHECK ([payment_deadline] >= [invoice_date]),
     CONSTRAINT CHK_payment_status_coherence CHECK (
-        ([status] = 'paid' AND [paid_amount] = [invoiced_amount]) OR
+        ([status] = 'paid' AND [paid_amount] = [invoiced_amount] AND [method] IS NOT NULL) OR
         ([status] IN ('pending', 'overdue') AND [paid_amount] < [invoiced_amount]) OR
-        ([status] = 'cancelled'))
+        ([status] = 'cancelled' AND [paid_amount] = 0.00)
+    )
 );
 GO
 
