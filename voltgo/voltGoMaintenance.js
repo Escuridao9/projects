@@ -920,6 +920,10 @@ function normalizeValue(value) {
         .replace(/\s+/g, "");
 }
 
+function normalizeCode(value) {
+    return value.replace(/\s+/g, "").toUpperCase();
+}
+
 function normalizeWord(value) {
     value = value.replace(/\s+/g, "");
     return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
@@ -1004,7 +1008,7 @@ function isMaintenanceDue(station) {
 
 function performMaintenance(code) {
 
-    code = code.toUpperCase();
+    code = normalizeCode(code);
 
     const station =
         findStationByCode(code);
@@ -1040,15 +1044,6 @@ function getValidLicenceCountry(country) {
 
 }
 
-function normalizeLicencePlate(licencePlate) {
-
-    return licencePlate
-        .toUpperCase()
-        .replace(/\s+/g, "");
-
-}
-
-
 // ==================== STATIONS ====================
 
 function createStation(
@@ -1060,8 +1055,8 @@ function createStation(
     status
 ) {
 
-    code = normalizeWord(code);
-    connectorType = connectorType.toUpperCase();
+    code = normalizeCode(code);
+    connectorType = normalizeCode(connectorType);
 
     if (!validateStation(
         "create",
@@ -1092,7 +1087,7 @@ function createStation(
         code: code,
         district: validDistrict,
         municipality: validMunicipality,
-        standardPower: power * 0.20,
+        standardPower: Number(power * 0.20),
         fastPower: power,
         connectorType: connectorType,
         status: validStatus,
@@ -1139,8 +1134,8 @@ function updateStation(
     status
 ) {
 
-    code = code.toUpperCase();
-    connectorType = connectorType.toUpperCase();
+    code = normalizeCode(code);
+    connectorType = normalizeCode(connectorType);
 
     if (!validateStation(
         "update",
@@ -1171,7 +1166,7 @@ function updateStation(
 
     station.district = validDistrict;
     station.municipality = validMunicipality;
-    station.standardPower = power * 0.20;
+    station.standardPower = Number(power * 0.20);
     station.fastPower = power;
     station.connectorType = connectorType;
     station.status = validStatus;
@@ -1181,7 +1176,7 @@ function updateStation(
 
 function removeStation(code) {
 
-    code = code.toUpperCase();
+    code = normalizeCode(code);
 
     if (!validateStation(
         "remove",
@@ -1585,29 +1580,21 @@ function createClient(
     licencePlate
 ) {
 
-    tif =
-        normalizeValue(tif);
+    tif = normalizeValue(tif);
 
-    firstName =
-        normalizeWord(firstName);
+    firstName = normalizeWord(firstName);
 
-    lastName =
-        normalizeWord(lastName);
+    lastName = normalizeWord(lastName);
 
-    dob =
-        dob.replace(/[\/\s]+/g, "-");
+    dob = dob.replace(/[\/\s]+/g, "-");
 
-    phonePrefix =
-        normalizePhonePrefix(phonePrefix);
+    phonePrefix = normalizePhonePrefix(phonePrefix);
 
-    phoneNumber =
-        normalizeValue(phoneNumber);
+    phoneNumber = normalizeValue(phoneNumber);
 
-    licenceCountry =
-        licenceCountry.trim();
+    licenceCountry = licenceCountry.trim();
 
-    licencePlate =
-        normalizeLicencePlate(licencePlate);
+    licencePlate = normalizeCode(licencePlate);
 
     if (!validateClient(
         "create",
@@ -1666,30 +1653,21 @@ function updateClient(
     licenceCountry,
     licencePlate
 ) {
+    tif = normalizeValue(tif);
 
-    tif =
-        normalizeValue(tif);
+    firstName = normalizeWord(firstName);
 
-    firstName =
-        normalizeWord(firstName);
+    lastName = normalizeWord(lastName);
 
-    lastName =
-        normalizeWord(lastName);
+    dob = dob.replace(/[\/\s]+/g, "-");
 
-    dob =
-        dob.replace(/[\/\s]+/g, "-");
+    phonePrefix = normalizePhonePrefix(phonePrefix);
 
-    phonePrefix =
-        normalizePhonePrefix(phonePrefix);
+    phoneNumber = normalizeValue(phoneNumber);
 
-    phoneNumber =
-        normalizeValue(phoneNumber);
+    licenceCountry = licenceCountry.trim();
 
-    licenceCountry =
-        licenceCountry.trim();
-
-    licencePlate =
-        normalizeLicencePlate(licencePlate);
+    licencePlate = normalizeCode(licencePlate);
 
     if (!validateClient(
         "update",
@@ -1706,30 +1684,20 @@ function updateClient(
         return;
     }
 
-    const client =
-        clients.find(
-            client => client.id === id
-        );
+    const client = clients.find(client => client.id === id);
 
-    const validLicenceCountry =
-        getValidLicenceCountry(
-            licenceCountry
-        );
+    const validLicenceCountry = getValidLicenceCountry(licenceCountry);
 
     client.tif = tif;
     client.firstName = firstName;
     client.lastName = lastName;
     client.dob = dob;
-    client.phoneNumber =
-        phonePrefix + phoneNumber;
-    client.licenceCountry =
-        validLicenceCountry.country;
-    client.licencePlate =
-        licencePlate;
+    client.phoneNumber = phonePrefix + phoneNumber;
+    client.licenceCountry = validLicenceCountry.country;
+    client.licencePlate = licencePlate;
 
     console.log("Client updated successfully.");
 }
-
 
 // ==================== REMOVE CLIENT ====================
 
@@ -2064,11 +2032,7 @@ function createTariff(
         return;
     }
 
-    const validChargeType =
-        getValidValue(
-            chargeType,
-            chargeTypes
-        );
+    const validChargeType = getValidValue(chargeType, chargeTypes);
 
     const newTariff = {
         id: getNextId(
@@ -2083,9 +2047,7 @@ function createTariff(
 
     tariffs.push(newTariff);
 
-    console.log(
-        `Tariff created successfully with ID ${newTariff.id}.`
-    );
+    console.log(`Tariff created successfully with ID ${newTariff.id}.`);
 }
 
 function updateTariff(
@@ -2096,8 +2058,7 @@ function updateTariff(
     activationFee
 ) {
 
-    name =
-        normalizeWord(name);
+    name = normalizeWord(name);
 
     if (!validateTariff(
         "update",
@@ -2479,6 +2440,41 @@ function calculateCost(
     );
 }
 
+// ==================== CHARGES HELPER ====================
+
+function hasStationTimeConflict(
+    stationCode,
+    startDate,
+    endDate,
+    excludeChargeId
+) {
+
+    const start = new Date(startDate);
+    const end = endDate ? new Date(endDate) : null;
+
+    return charges.some(charge => {
+
+        if (charge.id === excludeChargeId) {
+            return false;
+        }
+
+        if (charge.stationCode !== stationCode) {
+            return false;
+        }
+
+        if (charge.status === "cancelled") {
+            return false;
+        }
+
+        const chargeStart = new Date(charge.startDate);
+        const chargeEnd = charge.endDate ? new Date(charge.endDate) : null;
+
+        const thisEnd = end || new Date(8640000000000000);
+        const otherEnd = chargeEnd || new Date(8640000000000000);
+
+        return start < otherEnd && chargeStart < thisEnd;
+    });
+}
 
 // ==================== SHOW CHARGES ====================
 
@@ -2518,26 +2514,15 @@ function createCharge(
     status
 ) {
 
-    stationCode =
-        normalizeWord(stationCode);
+    stationCode = normalizeCode(stationCode);
 
-    clientId =
-        Number(clientId);
+    clientId = Number(clientId);
 
-    tariffId =
-        Number(tariffId);
+    tariffId = Number(tariffId);
 
-    const validStatus =
-        getValidValue(
-            status,
-            chargeStatuses
-        );
+    const validStatus = getValidValue(status, chargeStatuses);
 
-    const id =
-        getNextId(
-            charges,
-            inactiveCharges
-        );
+    const id = getNextId(charges, inactiveCharges);
 
     if (!validateCharge(
         "create",
@@ -2552,11 +2537,7 @@ function createCharge(
         return;
     }
 
-    const duration =
-        calculateDuration(
-            startDate,
-            endDate
-        );
+    const duration = calculateDuration(startDate, endDate);
 
     const energy =
         calculateEnergy(
@@ -2639,8 +2620,7 @@ function updateCharge(
     status
 ) {
 
-    stationCode =
-        normalizeWord(stationCode);
+    stationCode = normalizeCode(stationCode);
 
     clientId =
         Number(clientId);
@@ -2814,11 +2794,7 @@ function validateCharge(
         return false;
     }
 
-    if (!stations.some(
-        station =>
-            normalizeWord(station.code) ===
-            normalizeWord(stationCode)
-    )) {
+    if (!stations.some( station => normalizeCode(station.code) === normalizeCode(stationCode))) {
         console.log("Station not found.");
         return false;
     }
@@ -2889,6 +2865,13 @@ function validateCharge(
         console.log("Tariff not found.");
         return false;
     }
+
+    if (hasStationTimeConflict(stationCode, startDate, endDate, id)) {
+    console.log(
+        "This station already has a charge scheduled during that time."
+    );
+    return false;
+}
 
     if (new Date(startDate) > new Date()) {
         console.log(
@@ -3328,12 +3311,7 @@ function getChargesByStatus(status) {
 }
 
 function findStationByCode(code) {
-
-    return stations.find(
-        station =>
-            normalizeWord(station.code) ===
-            normalizeWord(code)
-    );
+    return stations.find(station => normalizeCode(station.code) === normalizeCode(code));
 }
 
 function findClientByTIF(tif) {
@@ -3382,8 +3360,7 @@ function reportChargesByStation(
     status
 ) {
 
-    stationCode =
-        stationCode.toUpperCase();
+    stationCode = normalizeCode(stationCode);
 
     const reportCharges =
         getChargesByStatus(status).filter(
