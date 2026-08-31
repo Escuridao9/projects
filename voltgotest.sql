@@ -22,7 +22,8 @@ DROP TABLE IF EXISTS [client_records];
 DROP TABLE IF EXISTS [tariff_records];
 DROP TABLE IF EXISTS [maintenance_records];
 DROP TABLE IF EXISTS [station_records];
-DROP TABLE IF EXISTS [payment];
+DROP TABLE IF EXISTS [invoice_item];
+DROP TABLE IF EXISTS [invoice];
 DROP TABLE IF EXISTS [charge_session];
 DROP TABLE IF EXISTS [reservation];
 DROP TABLE IF EXISTS [maintenance];
@@ -122,8 +123,8 @@ CREATE TABLE [station] (
     CONSTRAINT FK_station_municipality FOREIGN KEY ([id_municipality]) REFERENCES [municipality]([id_municipality]),
     CONSTRAINT UQ_station_code UNIQUE ([code]),
     CONSTRAINT CHK_station_code CHECK ([code] COLLATE Latin1_General_CS_AS LIKE 'S[0-9][0-9][0-9]'),
-    CONSTRAINT CHK_station_standard_power CHECK ([standard_power] <= 20.00),
-    CONSTRAINT CHK_station_fast_power CHECK ([fast_power] > 20.00),
+    CONSTRAINT CHK_station_standard_power CHECK ([standard_power] = 0.2*[fast_power]),
+    CONSTRAINT CHK_station_fast_power CHECK ([fast_power] > 0),
     CONSTRAINT CHK_station_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
     CONSTRAINT CHK_station_status_cessation CHECK (
         ([active] = 1 AND [cessation_date] IS NULL) OR
@@ -133,6 +134,8 @@ GO
 
 CREATE TABLE [client] (
     [id_client] INT IDENTITY(1,1),
+    [id_company] INT NULL,
+    [id_tariff] INT NULL,
     [first_name] VARCHAR(50) NOT NULL,
     [last_name] VARCHAR(50) NOT NULL,
     [tif] CHAR(9) NOT NULL,
@@ -141,11 +144,14 @@ CREATE TABLE [client] (
     [address] VARCHAR(100) NOT NULL,
     [email] VARCHAR(100) NOT NULL,
     [type] VARCHAR(20) NOT NULL,
+    [total_points] INT NOT NULL,
     [active] BIT NOT NULL DEFAULT 1,
     [registration_date] DATETIME NOT NULL DEFAULT GETDATE(),
     [cessation_date] DATETIME NULL,
 
-    CONSTRAINT PK_client PRIMARY KEY ([id_client]),  
+    CONSTRAINT PK_client PRIMARY KEY ([id_client]),
+    CONSTRAINT FK_client_company FOREIGN KEY ([id_company]) REFERENCES [client]([id_client]),
+    CONSTRAINT FK_client_tariff FOREIGN KEY ([id_tariff]) REFERENCES [tariff]([id_tariff]),
     CONSTRAINT UQ_client_tif UNIQUE ([tif]),
     CONSTRAINT UQ_client_email UNIQUE ([email]),
     -- primeira letra maiuscula e apenas letras/espacos no restante
@@ -165,6 +171,7 @@ CREATE TABLE [client] (
     CONSTRAINT CHK_client_type_sex_coherence CHECK (
         ([type] = 'company' AND [sex] = 'N' AND [dob] IS NULL) OR
         ([type] = 'individual' AND [sex] IN ('M', 'F', 'O') AND [dob] IS NOT NULL)),
+    CONSTRAINT CHK_client_points CHECK ([total_points] >= 0),
     CONSTRAINT CHK_client_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
     CONSTRAINT CHK_client_status_cessation CHECK (
         ([active] = 1 AND [cessation_date] IS NULL) OR
@@ -235,7 +242,6 @@ CREATE TABLE [reservation] (
     [id_reservation] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
     [id_station] INT NOT NULL,
-    [id_connector] INT NOT NULL,
     [registration_date] DATETIME NOT NULL DEFAULT GETDATE(),
     [start_date_hour] DATETIME NOT NULL,
     [end_date_hour] DATETIME NOT NULL,
@@ -243,7 +249,7 @@ CREATE TABLE [reservation] (
 
     CONSTRAINT PK_reservation PRIMARY KEY ([id_reservation]),
     CONSTRAINT FK_reservation_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
-    CONSTRAINT FK_reservation_station_connector FOREIGN KEY ([id_station], [id_connector]) REFERENCES [station_connector]([id_station], [id_connector]),
+    CONSTRAINT FK_reservation_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
     CONSTRAINT CHK_reservation_end_date_after_start_date CHECK ([end_date_hour] > [start_date_hour]),
     -- damos uma tolerância de 1 minuto na star_date (para evitar erros com os milisegundos)
     CONSTRAINT CHK_reservation_registration CHECK ([start_date_hour] >= DATEADD(MINUTE, -1, [registration_date])),
@@ -261,10 +267,13 @@ CREATE TABLE [charge_session] (
     [id_vehicle] INT NOT NULL,
     [id_tariff] INT NOT NULL,
     [id_reservation] INT NULL,
+    [version_tariff] INT NOT NULL,
+    [price_tariff] INT NOT NULL,
     [start_date_hour] DATETIME NOT NULL DEFAULT GETDATE(),
     [end_date_hour] DATETIME NULL,
     [energy] DECIMAL(6,2) NULL,
     [status] VARCHAR(20) NOT NULL,
+    [points] INT NOT NULL,
 
     CONSTRAINT PK_charge_session PRIMARY KEY ([id_charge]),
     CONSTRAINT FK_charge_session_station_connector FOREIGN KEY ([id_station], [id_connector]) REFERENCES [station_connector]([id_station], [id_connector]),
@@ -273,6 +282,8 @@ CREATE TABLE [charge_session] (
     CONSTRAINT FK_charge_session_vehicle FOREIGN KEY ([id_vehicle]) REFERENCES [vehicle]([id_vehicle]),
     CONSTRAINT FK_charge_session_tariff FOREIGN KEY ([id_tariff]) REFERENCES [tariff]([id_tariff]),
     CONSTRAINT FK_charge_session_reservation FOREIGN KEY ([id_reservation]) REFERENCES [reservation]([id_reservation]),
+    CONSTRAINT CHK_charge_session_version CHECK ([version_tariff] > 0),
+    CONSTRAINT CHK_charge_session_price CHECK ([price_tariff] > 0),
     CONSTRAINT CHK_charge_session_end_date CHECK ([end_date_hour] IS NULL OR [end_date_hour] >= [start_date_hour]),
     CONSTRAINT CHK_charge_session_energy CHECK ([energy] IS NULL OR [energy] >= 0),
     CONSTRAINT CHK_charge_session_status CHECK ([status] IN ('in progress', 'terminated', 'invoiced', 'cancelled')),
@@ -282,7 +293,9 @@ CREATE TABLE [charge_session] (
     -- "terminated" ou "invoiced" - obrigatoriamente tem end_data e energy
     ([status] IN ('terminated', 'invoiced') AND [end_date_hour] IS NOT NULL AND [energy] IS NOT NULL) OR
     -- "cancelled"
-    ([status] = 'cancelled' AND [end_date_hour] = [start_date_hour] AND [energy] = 0.00)));
+    ([status] = 'cancelled' AND [end_date_hour] = [start_date_hour] AND [energy] = 0.00)),
+    CONSTRAINT CHK_charge_points CHECK ([points] >= 0));
+
 GO
 
 -- garante que cada reserva só pode ser associada a NO MÁXIMO 1 carregamento 
@@ -294,30 +307,37 @@ GO
 
 --TABELAS FINANCEIRAS E HISTORICOS
 
-CREATE TABLE [payment] (
-    [id_payment] INT IDENTITY(1,1),
-    [id_charge] INT NOT NULL,
-    [invoiced_amount] DECIMAL(10,2) NOT NULL,
-    [paid_amount] DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    [method] VARCHAR(30) NULL,
-    [frequency] VARCHAR(30) NOT NULL,
-    [status] VARCHAR(20) NOT NULL,
+CREATE TABLE [invoice] (
+    [id_invoice] INT IDENTITY(1,1),
+    [id_client] INT NOT NULL,
+    [total_amount] DECIMAL(10,2) NOT NULL,
     [invoice_date] DATE NOT NULL DEFAULT CONVERT(DATE, GETDATE()),
-    [payment_deadline] DATE NOT NULL DEFAULT CONVERT(DATE, DATEADD(DAY, 30, GETDATE())), -- default é 30 dias a partir da invoice_date
+    [payment_deadline] DATE NOT NULL DEFAULT CONVERT(DATE, GETDATE()),
+    [status] VARCHAR(20) NOT NULL,
+    [payment_date] DATE NULL,
 
-    CONSTRAINT PK_payment PRIMARY KEY ([id_payment]),
-    CONSTRAINT FK_payment_charge_session FOREIGN KEY ([id_charge]) REFERENCES [charge_session]([id_charge]),
-    CONSTRAINT CHK_payment_invoiced_amount CHECK ([invoiced_amount] > 0),
-    CONSTRAINT CHK_payment_paid_amount CHECK ([paid_amount] >= 0 AND [paid_amount] <= [invoiced_amount]),
-    CONSTRAINT CHK_payment_method CHECK (
-        [method] IS NULL OR 
-        [method] IN ('mb way', 'credit card', 'debit card', 'direct debit', 'bank transfer', 'cash')),
-    CONSTRAINT CHK_payment_frequency CHECK ([frequency] IN ('immediate', 'monthly')),
-    CONSTRAINT CHK_payment_deadline CHECK ([payment_deadline] >= [invoice_date]),
-    CONSTRAINT CHK_payment_status_coherence CHECK (
-        ([status] = 'paid' AND [paid_amount] = [invoiced_amount] AND [method] IS NOT NULL) OR
-        ([status] IN ('pending', 'overdue') AND [paid_amount] < [invoiced_amount]) OR
-        ([status] = 'cancelled' AND [paid_amount] = 0.00)));
+    CONSTRAINT PK_invoice PRIMARY KEY ([id_invoice]),
+    CONSTRAINT FK_invoice_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
+    CONSTRAINT CHK_invoice_total_amount CHECK ([total_amount] >= 0),
+    CONSTRAINT CHK_invoice_payment_deadline CHECK ([payment_deadline] >= [invoice_date]),
+    CONSTRAINT CHK_invoice_status CHECK ([status] COLLATE Latin1_General_CS_AS IN ('pending', 'paid', 'cancelled', 'expired')),
+    CONSTRAINT CHK_invoice_payment_date CHECK (
+        ([status] = 'paid' AND [payment_date] IS NOT NULL AND [payment_date] >= [invoice_date]) OR
+        ([status] <> 'paid' AND [payment_date] IS NULL)));
+GO
+
+CREATE TABLE [invoice_item] (
+    [id_invoice_item] INT IDENTITY(1,1),
+    [id_invoice] INT NOT NULL,
+    [id_charge_session] INT NOT NULL,
+    [charge_amount] DECIMAL(10,2) NOT NULL,
+
+    CONSTRAINT PK_invoice_item PRIMARY KEY ([id_invoice_item]),
+    CONSTRAINT FK_invoice_item_invoice FOREIGN KEY ([id_invoice]) REFERENCES [invoice]([id_invoice]) ON DELETE CASCADE,
+    CONSTRAINT FK_invoice_item_charge_session FOREIGN KEY ([id_charge_session]) REFERENCES [charge_session]([id_charge]),
+    CONSTRAINT UQ_invoice_item_charge_session UNIQUE ([id_charge_session]),
+    CONSTRAINT CHK_invoice_item_charge_amount CHECK ([charge_amount] >= 0)
+);
 GO
 
 CREATE TABLE [station_records]  (
@@ -353,6 +373,7 @@ GO
 CREATE TABLE [tariff_records] (
     [id_tariff_record] INT IDENTITY(1,1),
     [id_tariff] INT NOT NULL,
+    [version] INT NOT NULL,
     [field_changed] VARCHAR(50) NOT NULL,
     [previous_value] VARCHAR(250) NOT NULL,
     [new_value] VARCHAR(250) NOT NULL,
@@ -361,6 +382,7 @@ CREATE TABLE [tariff_records] (
 
     CONSTRAINT PK_tariff_records PRIMARY KEY ([id_tariff_record]),
     CONSTRAINT FK_tariff_records_tariff FOREIGN KEY ([id_tariff]) REFERENCES [tariff]([id_tariff]),
+    CONSTRAINT CHK_tariff_version CHECK ([version] > 0),
     CONSTRAINT CHK_tariff_records_field CHECK (TRIM([field_changed]) <> ''),
     CONSTRAINT CHK_tariff_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> ''));
 GO
@@ -502,7 +524,77 @@ INSERT INTO [payment] ([id_charge], [invoiced_amount], [paid_amount], [method], 
 GO
 
 
+CREATE PROCEDURE sp_station_CRUD
+    @Action VARCHAR(10),
+    @id_station INT = NULL,
+    @id_municipality INT = NULL,
+    @code CHAR(4) = NULL,
+    @standard_power DECIMAL(5,2) = 20.00,
+    @fast_power DECIMAL(5,2) = 100.00,
+    @active BIT = 1,
+    @cessation_date DATETIME = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
 
+    IF @Action = 'CREATE'
+    BEGIN
+        INSERT INTO [station] ([id_municipality], [code], [standard_power], [fast_power], [active], [registration_date], [cessation_date])
+        VALUES (@id_municipality, @code, @standard_power, @fast_power, @active, GETDATE(), @cessation_date);
+        
+        DECLARE @new_id INT = SCOPE_IDENTITY();
+
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        VALUES (@new_id, 'INSERT', 'N/A', CONVERT(VARCHAR(250), @new_id), 'New station created via SP.');
+    END
+
+    ELSE IF @Action = 'UPDATE'
+    BEGIN
+        -- municipality
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        SELECT @id_station, 'id_municipality', CONVERT(VARCHAR(250), t.[id_municipality]), CONVERT(VARCHAR(250), @id_municipality), 'Update of municipality.'
+        FROM [station] AS t WHERE t.[id_station] = @id_station AND t.[id_municipality] <> @id_municipality;
+
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        SELECT @id_station, 'code', t.[code], @code, 'Update of station code.'
+        FROM [station] AS t WHERE t.[id_station] = @id_station AND t.[code] <> @code;
+
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        SELECT @id_station, 'standard_power', CONVERT(VARCHAR(250), t.[standard_power]), CONVERT(VARCHAR(250), @standard_power), 'Update of standard power.'
+        FROM [station] AS t WHERE t.[id_station] = @id_station AND t.[standard_power] <> @standard_power;
+
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        SELECT @id_station, 'fast_power', CONVERT(VARCHAR(250), t.[fast_power]), CONVERT(VARCHAR(250), @fast_power), 'Update of fast power.'
+        FROM [station] AS t WHERE t.[id_station] = @id_station AND t.[fast_power] <> @fast_power;
+
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        SELECT @id_station, 'active', CONVERT(VARCHAR(250), t.[active]), CONVERT(VARCHAR(250), @active), 'Update of status.'
+        FROM [station] AS t WHERE t.[id_station] = @id_station AND t.[active] <> @active;
+
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        SELECT @id_station, 'cessation_date', ISNULL(CONVERT(VARCHAR(250), t.[cessation_date], 120), 'NULL'), ISNULL(CONVERT(VARCHAR(250), @cessation_date, 120), 'NULL'), 'Update of cessation date.'
+        FROM [station] AS t WHERE t.[id_station] = @id_station AND ISNULL(t.[cessation_date], '1900-01-01') <> ISNULL(@cessation_date, '1900-01-01');
+
+        -- Executa o update efetivo na tabela
+        UPDATE [station]
+        SET [id_municipality] = ISNULL(@id_municipality, [id_municipality]),
+            [code] = ISNULL(@code, [code]),
+            [fast_power] = ISNULL(@fast_power, [fast_power]),
+            [standard_power] = ISNULL(@standard_power, 0.2 * ISNULL(@fast_power, [fast_power])),
+            [active] = ISNULL(@active, [active]),
+            [cessation_date] = @cessation_date
+        WHERE [id_station] = @id_station;
+    END
+
+    ELSE IF @Action = 'DELETE'
+    BEGIN
+        INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [observations])
+        VALUES (@id_station, 'DELETE', CONVERT(VARCHAR(250), @id_station), 'DELETED', 'Station physically deleted via SP.');
+
+        DELETE FROM [station] WHERE [id_station] = @id_station;
+    END
+END;
+GO
 
 
 
