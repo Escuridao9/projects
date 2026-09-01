@@ -1,0 +1,24 @@
+[
+  {
+    "id": 1,
+    "tif": "271747390",
+    "firstName": "Pedro",
+    "lastName": "Gomes",
+    "dob": "1995-07-13",
+    "phoneNumber": "+351916291322",
+    "licenceCountry": "Portugal",
+    "licencePlate": "AA-21-BB",
+    "points": 7
+  },
+  {
+    "id": 2,
+    "tif": "278934321",
+    "firstName": "Maria",
+    "lastName": "Silva",
+    "dob": "1998-01-15",
+    "phoneNumber": "+351915439865",
+    "licenceCountry": "Portugal",
+    "licencePlate": "GH-45-AC",
+    "points": 0
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "id": 1,
+    "code": "S001",
+    "district": "Braga",
+    "municipality": "Braga",
+    "standardPower": 20,
+    "fastPower": 100,
+    "connectorType": "MJG",
+    "status": "active",
+    "lastMaintenance": "2026-08-26T16:00"
+  },
+  {
+    "id": 2,
+    "code": "S002",
+    "district": "Porto",
+    "municipality": "Porto",
+    "standardPower": 20,
+    "fastPower": 100,
+    "connectorType": "DSG",
+    "status": "under maintenance",
+    "lastMaintenance": "2026-08-10T09:00"
+  },
+  {
+    "id": 3,
+    "code": "S003",
+    "district": "Coimbra",
+    "municipality": "Coimbra",
+    "standardPower": 20,
+    "fastPower": 100,
+    "connectorType": "MJG",
+    "status": "active",
+    "lastMaintenance": "2026-08-02T11:00"
+  },
+  {
+    "id": 4,
+    "code": "S004",
+    "district": "Lisboa",
+    "municipality": "Lisboa",
+    "standardPower": 20,
+    "fastPower": 100,
+    "connectorType": "MGS",
+    "status": "active",
+    "lastMaintenance": "2026-08-20T14:00"
+  }
+]
