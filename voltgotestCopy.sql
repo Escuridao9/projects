@@ -749,3 +749,220 @@ GO
 -- teste DELETE
 EXEC sp_delete_station 1
 
+GO
+
+IF OBJECT_ID('fn_GetAverageStationDowntimeDays', 'FN') IS NOT NULL
+    DROP FUNCTION fn_GetAverageStationDowntimeDays;
+GO
+
+CREATE FUNCTION fn_GetAverageStationDowntimeDays (@id_station INT)
+RETURNS DECIMAL(8,2)
+AS
+BEGIN
+    DECLARE @avg_downtime DECIMAL(8,2);
+
+    SELECT @avg_downtime = AVG(CAST(DATEDIFF(MINUTE, [start_date], [end_date]) AS DECIMAL(10,2)) / 1440.0)
+    FROM [maintenance]
+    WHERE [id_station] = @id_station
+      AND [status] = 'resolved'
+      AND [end_date] IS NOT NULL;
+
+    RETURN ISNULL(@avg_downtime, 0.00);
+END;
+GO
+
+SELECT dbo.fn_GetAverageStationDowntimeDays(1) AS avg_downtime_days;
+GO
+
+-- ============================================================================
+-- RELATÓRIO 1: Carregamentos por tipo de conector
+-- Lista todos os tipos de conector, o número de carregamentos associados a cada um,
+-- inclui conectores sem carregamentos e os ordena do mais para o menos utilizado.
+-- ============================================================================
+-- Justificação do LEFT JOIN: Utiliza-se LEFT JOIN para garantir que tipos de conector 
+-- que ainda não foram utilizados em nenhuma sessão de carregamento continuem a ser 
+-- listados no relatório com contagem igual a 0.
+SELECT 
+    c.[id_connector],
+    c.[name] AS connector_type,
+    c.[description],
+    COUNT(cs.[id_charge]) AS total_charge_sessions
+FROM [connector] c
+LEFT JOIN [charge_session] cs 
+    ON c.[id_connector] = cs.[id_connector]
+GROUP BY 
+    c.[id_connector], 
+    c.[name], 
+    c.[description]
+ORDER BY 
+    total_charge_sessions DESC;
+GO
+
+
+-- ============================================================================
+-- RELATÓRIO 2: Postos e número de carregamentos
+-- Lista todos os postos e apresenta o número de carregamentos terminados associados.
+-- Inclui postos sem carregamentos e ordena de forma decrescente.
+-- ============================================================================
+-- Justificação do LEFT JOIN: O LEFT JOIN garante que postos recentemente instalados 
+-- ou sem registo de carregamentos 'terminated' fiquem visíveis com contagem igual a 0.
+SELECT 
+    s.[id_station],
+    s.[code] AS station_code,
+    COUNT(cs.[id_charge]) AS terminated_charge_sessions
+FROM [station] s
+LEFT JOIN [charge_session] cs 
+    ON s.[id_station] = cs.[id_station] 
+   AND cs.[status] = 'terminated'
+GROUP BY 
+    s.[id_station], 
+    s.[code]
+ORDER BY 
+    terminated_charge_sessions DESC;
+GO
+
+
+-- ============================================================================
+-- RELATÓRIO 3: Custo médio por tarifário
+-- Relaciona carregamentos e tarifários para calcular o valor médio do custo,
+-- considerando apenas carregamentos com o estado 'invoiced'.
+-- ============================================================================
+-- Justificação do INNER JOIN: Usa-se INNER JOIN porque o cálculo do custo médio exige 
+-- estritamente que existam sessões de carregamento faturadas associadas aos tarifários.
+SELECT 
+    t.[id_tariff],
+    t.[name] AS tariff_name,
+    t.[version] AS tariff_version,
+    AVG(ii.[charge_amount]) AS average_invoice_cost
+FROM [tariff] t
+INNER JOIN [charge_session] cs 
+    ON t.[id_tariff] = cs.[id_tariff] 
+   AND t.[version] = cs.[version_tariff]
+INNER JOIN [invoice_item] ii 
+    ON cs.[id_charge] = ii.[id_charge_session]
+WHERE 
+    cs.[status] = 'invoiced'
+GROUP BY 
+    t.[id_tariff], 
+    t.[name], 
+    t.[version];
+GO
+
+
+-- ============================================================================
+-- RELATÓRIO 4: Clientes e número de carregamentos
+-- Lista todos os clientes e o número de carregamentos associados. Inclui clientes 
+-- sem carregamentos e identifica clientes com mais do que um carregamento (HAVING).
+-- ============================================================================
+-- Justificação do LEFT JOIN: Permite listar a totalidade da base de clientes, mesmo 
+-- aqueles que ainda não realizaram qualquer carregamento.
+SELECT 
+    c.[id_client],
+    CONCAT(c.[first_name], ' ', c.[last_name]) AS client_name,
+    c.[type] AS client_type,
+    COUNT(cs.[id_charge]) AS total_charge_sessions
+FROM [client] c
+LEFT JOIN [charge_session] cs 
+    ON c.[id_client] = cs.[id_client]
+GROUP BY 
+    c.[id_client], 
+    c.[first_name], 
+    c.[last_name], 
+    c.[type]
+HAVING 
+    COUNT(cs.[id_charge]) > 1;
+GO
+
+
+-- ============================================================================
+-- RELATÓRIO 5: Carregamentos e respetivos pagamentos
+-- Lista todos os carregamentos, indicando o número de pagamentos registados 
+-- por carregamento. Inclui carregamentos sem qualquer pagamento/fatura associada.
+-- ============================================================================
+-- Justificação do LEFT JOIN: Utilizam-se múltiplos LEFT JOINs encadeados para garantir 
+-- que carregamentos em curso, cancelados ou pendentes de faturação apareçam na 
+-- listagem com contagem de pagamento igual a 0.
+SELECT 
+    cs.[id_charge],
+    cs.[start_date_hour],
+    cs.[status] AS charge_status,
+    COUNT(i.[id_invoice]) AS total_payments_registered
+FROM [charge_session] cs
+LEFT JOIN [invoice_item] ii 
+    ON cs.[id_charge] = ii.[id_charge_session]
+LEFT JOIN [invoice] i 
+    ON ii.[id_invoice] = i.[id_invoice] 
+   AND i.[status] = 'paid'
+GROUP BY 
+    cs.[id_charge], 
+    cs.[start_date_hour], 
+    cs.[status];
+GO
+
+
+-- ============================================================================
+-- RELATÓRIO 6: Concelhos e valor total faturado
+-- Relaciona concelhos, postos, carregamentos e pagamentos para calcular o valor 
+-- total faturado por concelho. Filtra por concelhos com total faturado > 10.00.
+-- ============================================================================
+-- Justificação do LEFT JOIN: Utiliza-se LEFT JOIN a partir de concelho para permitir 
+-- a agregação financeira completa e prevenir perda de dados de postos sem faturas.
+SELECT 
+    m.[id_municipality],
+    m.[name] AS municipality_name,
+    ISNULL(SUM(ii.[charge_amount]), 0.00) AS total_invoiced_amount
+FROM [municipality] m
+LEFT JOIN [station] s 
+    ON m.[id_municipality] = s.[id_municipality]
+LEFT JOIN [charge_session] cs 
+    ON s.[id_station] = cs.[id_station]
+LEFT JOIN [invoice_item] ii 
+    ON cs.[id_charge] = ii.[id_charge_session]
+GROUP BY 
+    m.[id_municipality], 
+    m.[name]
+HAVING 
+    ISNULL(SUM(ii.[charge_amount]), 0.00) > 10.00;
+GO
+
+
+-- ============================================================================
+-- RELATÓRIO 7: Postos e existência de manutenções
+-- Lista todos os postos, indicando o número de ocorrências associadas a cada um.
+-- Inclui postos sem ocorrências e ordena para identificar o Top 10 com mais manutenções.
+-- ============================================================================
+-- Justificação do LEFT JOIN: Permite incluir todos os postos da rede na listagem,
+-- garantindo que postos sem histórico de manutenção não fiquem de fora do relatório.
+SELECT TOP 10
+    s.[id_station],
+    s.[code] AS station_code,
+    COUNT(m.[id_maintenance]) AS total_maintenances
+FROM [station] s
+LEFT JOIN [maintenance] m 
+    ON s.[id_station] = m.[id_station]
+GROUP BY 
+    s.[id_station], 
+    s.[code]
+ORDER BY 
+    total_maintenances DESC;
+GO
+
+
+-- Relatório Estratégico: Taxa de Ineficiência e Expiração de Reservas por Posto
+SELECT 
+    s.[id_station],
+    s.[code] AS station_code,
+    COUNT(r.[id_reservation]) AS total_reservations,
+    SUM(CASE WHEN r.[status] = 'expired' THEN 1 ELSE 0 END) AS expired_reservations,
+    CAST(
+        (SUM(CASE WHEN r.[status] = 'expired' THEN 1.0 ELSE 0 END) / COUNT(r.[id_reservation])) * 100 
+        AS DECIMAL(5,2)
+    ) AS no_show_rate_percentage
+FROM [station] s
+INNER JOIN [reservation] r 
+    ON s.[id_station] = r.[id_station]
+GROUP BY 
+    s.[id_station], 
+    s.[code]
+ORDER BY 
+    no_show_rate_percentage DESC;
