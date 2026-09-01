@@ -74,7 +74,7 @@ CREATE TABLE [tariff] (
     [version] INT NOT NULL DEFAULT 1,
     [charge_type] VARCHAR(20) NOT NULL,
     [price] DECIMAL(4,2) NOT NULL,
-    [activation_fee] DECIMAL (4,2) NULL,
+    [activation_fee] DECIMAL (4,2) NOT NULL,
     [active] BIT NOT NULL DEFAULT 1,
     [registration_date] DATETIME NOT NULL DEFAULT GETDATE(),
     [cessation_date] DATETIME NULL,
@@ -88,7 +88,7 @@ CREATE TABLE [tariff] (
     CONSTRAINT CHK_tariff_version CHECK ([version] >= 1),
     CONSTRAINT CHK_tariff_charge_type CHECK ([charge_type] COLLATE Latin1_General_CS_AS IN ('standard', 'fast')),
     CONSTRAINT CHK_tariff_price CHECK ([price] > 0),
-    CONSTRAINT CHK_tariff_activation_fee CHECK ([activation_fee] IS NULL OR [activation_fee] >= 0),
+    CONSTRAINT CHK_tariff_activation_fee CHECK ([activation_fee] >= 0),
     CONSTRAINT CHK_tariff_cessation_after_registration CHECK ([cessation_date] IS NULL OR [cessation_date] >= [registration_date]),
     CONSTRAINT CHK_tariff_status_cessation CHECK (
         ([active] = 1 AND [cessation_date] IS NULL) OR
@@ -145,25 +145,17 @@ CREATE TABLE [client] (
     CONSTRAINT FK_client_company FOREIGN KEY ([id_company]) REFERENCES [client]([id_client]),
     CONSTRAINT FK_client_tariff FOREIGN KEY ([id_tariff]) REFERENCES [tariff]([id_tariff]),
     CONSTRAINT UQ_client_tif UNIQUE ([tif]),
-    CONSTRAINT UQ_client_email UNIQUE ([email]),
-    -- uma company não pode ter o id_company preenchido
     CONSTRAINT CHK_client_company CHECK ([id_company] IS NULL OR [id_company] <> [id_client]),
-    -- primeira letra maiuscula e apenas letras/espacos no restante
     CONSTRAINT CHK_client_first_name_upper CHECK (LEFT([first_name], 1) COLLATE Latin1_General_CS_AS LIKE '[A-ZÀ-Ü]'),
     CONSTRAINT CHK_client_first_name_chars CHECK ([first_name] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Zà-üÀ-ÜçÇ -]%'),
-    -- primeira letra maiuscula e apenas letras/espacos/pontos/traços no restante (para S.A. / Lda.)
     CONSTRAINT CHK_client_last_name_upper CHECK (LEFT([last_name], 1) COLLATE Latin1_General_CS_AS LIKE '[A-ZÀ-Ü]'),
     CONSTRAINT CHK_client_last_name_chars CHECK ([last_name] COLLATE Latin1_General_CS_AS NOT LIKE '%[^a-zA-Zà-üÀ-ÜçÇ .-]%'),
     CONSTRAINT CHK_client_tif CHECK ([tif] LIKE '[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]'),
     CONSTRAINT CHK_client_sex CHECK ([sex] COLLATE Latin1_General_CS_AS IN ('M', 'F', 'O', 'N')),
     CONSTRAINT CHK_client_dob CHECK ([dob] >= '1900-01-01'),
-    -- evita que seja uma string vazia
     CONSTRAINT CHK_client_address CHECK (TRIM([address]) <> ''),
     CONSTRAINT CHK_client_email CHECK ([email] LIKE '%_@_%._%'),
     CONSTRAINT CHK_client_type CHECK ([type] IN ('individual', 'company')),
-    -- company: sex = 'N', dob = NULL e id_company = NULL
-    -- individual: sex = M/F/O e dob preenchido
-    -- id_company preenchido indica que o individual pertence a uma empresa 
     CONSTRAINT CHK_client_type_coherence CHECK (
         ([type] = 'company' AND [sex] = 'N' AND [dob] IS NULL AND [id_company] IS NULL) OR
         ([type] = 'individual' AND [sex] IN ('M', 'F', 'O') AND [dob] IS NOT NULL)),
@@ -240,8 +232,6 @@ CREATE TABLE [reservation] (
     CONSTRAINT FK_reservation_client FOREIGN KEY ([id_client]) REFERENCES [client]([id_client]),
     CONSTRAINT FK_reservation_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]),
     CONSTRAINT CHK_reservation_end_date_after_start_date CHECK ([end_date_hour] > [start_date_hour]),
-    -- damos uma tolerância de 1 minuto na star_date (para evitar erros com os milisegundos)
-    CONSTRAINT CHK_reservation_registration CHECK ([start_date_hour] >= DATEADD(MINUTE, -1, [registration_date])),
     CONSTRAINT CHK_reservation_status CHECK ([status] IN ('active', 'completed', 'cancelled', 'expired')));
 GO
 
@@ -394,112 +384,6 @@ GO
 
 -- INSERÇÃO DE DADOS
 
-INSERT INTO [municipality] ([name]) VALUES 
-('Braga'), ('Porto'), ('Lisboa'), ('Évora'), ('Viana do Castelo'), ('Bragança');
-GO
-
-INSERT INTO [connector] ([name], [description]) VALUES 
-('CCS', 'Combined Charging System - Fast DC standard in Europe'),
-('CHA', 'CHAdeMO - Japanese fast DC standard'),
-('TSP', 'Tesla Supercharger Protocol'),
-('TYP', 'Type 2 Mennekes - European AC three-phase standard');
-GO
-
-INSERT INTO [role] ([name], [observations]) VALUES 
-('account holder', 'Account owner responsible for the subscription'),
-('driver', 'Vehicle driver conducting charge sessions'),
-('paying entity', 'Entity responsible for invoice payments');
-GO
-
-INSERT INTO [tariff] ([name], [version], [charge_type], [price], [activation_fee], [active], [registration_date], [cessation_date]) VALUES
-('Normal', 1, 'standard', 0.35, 0.5, 1, '2025-01-01 00:00:00', NULL),
-('Premium', 1, 'fast', 0.55, 1.00, 0, '2024-01-01 00:00:00', '2024-12-31 23:59:59'),
-('Premium', 2, 'fast', 0.65, 1.00, 1, '2025-01-01 00:00:00', NULL);
-GO
-
-INSERT INTO [client] ([id_company], [id_tariff], [first_name], [last_name], [tif], [sex], [dob], [address], [email], [type], [total_points], [active], [registration_date], [cessation_date]) VALUES
-(NULL, 1, 'EcoDrive', 'Lda.', '501234567', 'N', NULL, 'Avenida Central 100, Porto', 'geral@ecodrive.pt', 'company', 250, 1, '2025-01-01 00:00:00', NULL),
-(NULL, 2, 'VoltPower', 'S.A.', '509876543', 'N', NULL, 'Praça do Comércio 50, Lisboa', 'contacto@voltpower.pt', 'company', 100, 1, '2025-01-01 00:00:00', NULL),
-(1, 1, 'João', 'Silva', '123456789', 'M', '1985-06-15', 'Rua das Flores 12, Porto', 'joao.silva@email.com', 'individual', 0, 1, '2025-01-02 00:00:00', NULL),
-(1, 1, 'Ana', 'Santos', '234567890', 'F', '1990-03-22', 'Rua de Cima 45, Matosinhos', 'ana.santos@email.com', 'individual', 0, 1, '2025-01-03 00:00:00', NULL),
-(2, 2, 'Carlos', 'Ferreira', '345678901', 'M', '1978-11-05', 'Avenida da Liberdade 200, Lisboa', 'carlos.ferreira@email.com', 'individual', 0, 1, '2025-01-04 00:00:00', NULL),
-(NULL, 1, 'Maria', 'Oliveira', '456789012', 'F', '1995-12-30', 'Rua da Republica 80, Coimbra', 'maria.oliveira@email.com', 'individual', 50, 1, '2025-01-05 00:00:00', NULL);
-GO
-
-INSERT INTO [station] ([id_municipality], [code], [standard_power], [fast_power], [active], [registration_date], [cessation_date]) VALUES
-(1, 'S001', 20.00, 100.00, 1, '2025-01-01 00:00:00', NULL), 
-(2, 'S002', 20.00, 100.00, 1, '2025-01-01 00:00:00', NULL), 
-(3, 'S003', 10.00,  50.00, 1, '2025-01-02 00:00:00', NULL), 
-(5, 'S004', 20.00, 100.00, 0, '2024-01-10 00:00:00', '2024-12-31 23:59:59'), 
-(4, 'S005', 30.00, 150.00, 1, '2025-01-05 00:00:00', NULL); 
-GO
-
-INSERT INTO [station_connector] ([id_station], [id_connector]) VALUES 
-(1, 1), (1, 2), (2, 1), (2, 2), (3, 1), (3, 2), (4, 1), (4, 2), (5, 1), (5, 2);
-GO
-
-INSERT INTO [client_role] ([id_client], [id_role]) VALUES 
-(1, 3), (2, 3), (3, 3), (4, 2), (5, 1);
-GO
-
-INSERT INTO [vehicle] ([id_client], [licence_plate], [country]) VALUES 
-(3, '12-AB-34', 'Portugal'), -- Veículo do João Silva (associado à EcoDrive - ID 3)
-(4, '56-CD-78', 'Portugal'), -- Veículo da Ana Santos (associada à EcoDrive - ID 4)
-(5, '90-EF-12', 'Portugal'), -- Veículo do Carlos Ferreira (associado à VoltPower - ID 5)
-(6, '34-GH-56', 'Portugal'), -- Veículo da Maria Oliveira (particular independente - ID 6)
-(6, '78-IJ-90', 'Espanha');  -- Segundo veículo da Maria Oliveira (ID 6)
-GO
-
-INSERT INTO [maintenance] ([id_station], [type], [description], [status], [start_date], [end_date], [cost]) VALUES 
-(1, 'repair', 'Replacement of damaged CCS connector at station S001', 'resolved', '2025-01-10 08:30:00', '2025-01-10 12:00:00', 150.00),
-(2, 'inspection', 'Routine periodic inspection at station S002', 'in process', '2026-03-01 09:00:00', NULL, NULL),
-(3, 'upgrade', 'Firmware update for the payment system at station S003', 'open', '2026-03-02 14:00:00', NULL, NULL),
-(5, 'repair', 'Repair of the display panel at station S005', 'resolved', '2025-02-01 10:00:00', '2025-02-02 16:30:00', 320.50);
-GO
-
-INSERT INTO [reservation] ([id_client], [id_station], [registration_date], [start_date_hour], [end_date_hour], [status]) VALUES 
-(3, 1, '2026-06-01 10:00:00', '2026-06-01 10:30:00', '2026-06-01 11:30:00', 'active'),
-(4, 2, '2026-06-02 14:00:00', '2026-06-02 15:00:00', '2026-06-02 16:00:00', 'completed'),
-(5, 3, '2026-06-03 09:00:00', '2026-06-03 11:00:00', '2026-06-03 12:00:00', 'cancelled'),
-(6, 5, '2026-06-04 08:00:00', '2026-06-04 09:00:00', '2026-06-04 10:00:00', 'expired');
-GO
-
-INSERT INTO [charge_session] ([id_station], [id_connector], [id_client], [id_driver], [id_vehicle], [id_tariff], [id_reservation], [start_date_hour], [end_date_hour], [energy], [status]) VALUES 
-(1, 1, 1, 4, 1, 1, NULL, '2026-03-20 10:00:00', NULL, NULL, 'in progress'),
-(2, 2, 2, 5, 2, 2, NULL, '2026-03-21 14:00:00', '2026-03-21 15:30:00', 35.50, 'terminated'),
-(3, 1, 3, 2, 3, 1, NULL, '2026-03-22 09:00:00', '2026-03-22 10:15:00', 20.00, 'invoiced');
-GO
-
-INSERT INTO [charge_session] ([id_station], [id_connector], [id_client], [id_driver], [id_vehicle], [id_tariff], [id_reservation], [version_tariff], [price_tariff], [start_date_hour], [end_date_hour], [energy], [status], [points]) VALUES 
-(2, 1, 1, 4, 2, 1, 2, 1, 0.35, '2026-06-02 15:00:00', '2026-06-02 16:00:00', 25.50, 'terminated', 25),
-(5, 2, 6, 6, 4, 1, NULL, 1, 0.35, '2026-06-04 09:00:00', '2026-06-04 10:00:00', 40.00, 'invoiced', 40),
-(1, 1, 1, 3, 1, 1, NULL, 1, 0.35, '2026-08-31 22:00:00', NULL, NULL, 'in progress', 0),
-(3, 1, 2, 5, 3, 2, 3, 2, 0.65, '2026-06-03 11:00:00', '2026-06-03 11:00:00', 0.00, 'cancelled', 0),
-(3, 1, 2, 5, 3, 2, NULL, 2, 0.65, '2026-06-03 14:00:00', '2026-06-03 15:15:00', 55.20, 'terminated', 0),
-(1, 2, 1, 4, 2, 1, NULL, 1, 0.35, '2026-06-05 10:00:00', '2026-06-05 10:45:00', 18.30, 'invoiced', 0),
-(4, 1, 6, 6, 5, 1, NULL, 1, 0.35, '2026-08-31 22:15:00', NULL, NULL, 'in progress', 50),
-(5, 2, 6, 6, 4, 1, 4, 1, 0.35, '2026-06-04 09:00:00', '2026-06-04 10:00:00', 30.00, 'terminated', 30),
-(1, 1, 6, 6, 4, 1, NULL, 1, 0.35, '2026-06-10 11:00:00', '2026-06-10 12:00:00', 35.00, 'terminated', 35),
-(2, 2, 2, 5, 3, 2, NULL, 2, 0.65, '2026-06-11 14:30:00', '2026-06-11 16:00:00', 70.50, 'invoiced', 0),
-(3, 1, 1, 3, 1, 1, NULL, 1, 0.35, '2026-06-12 08:15:00', '2026-06-12 09:00:00', 22.10, 'terminated', 0),
-(4, 2, 6, 6, 5, 1, NULL, 1, 0.35, '2026-06-13 18:00:00', '2026-06-13 18:00:00', 0.00, 'cancelled', 0),
-(5, 1, 1, 4, 2, 1, NULL, 1, 0.35, '2026-06-14 16:00:00', '2026-06-14 17:10:00', 45.80, 'invoiced', 0);
-GO
-
-INSERT INTO [invoice] ([id_client], [total_amount], [invoice_date], [payment_deadline], [payment_date], [status]) VALUES 
--- Invoice 1: Client 1 (EcoDrive) covering charge sessions with status 'invoiced' (IDs 6 and 13)
--- Charge 6: energy 18.30 * 0.35 tariff = 6.415 -> Let's totalize accurately based on the sessions
-(1, 22.45, '2026-06-16', '2026-06-30', '2026-06-25', 'paid'),
-
--- Invoice 2: Client 6 (Maria Oliveira) covering her 'invoiced' session (ID 2)
--- Charge 2: energy 40.00 * 0.35 tariff = 14.00
-(6, 14.00, '2026-06-05', '2026-06-20', NULL, 'pending'),
-
--- Invoice 3: Client 2 (VoltPower) covering her 'invoiced' session (ID 10)
--- Charge 10: energy 70.50 * 0.65 tariff = 45.825 -> rounded to 45.83
-(2, 45.83, '2026-06-12', '2026-06-26', '2026-06-20', 'paid');
-GO
-
 -- 1. Municipality
 INSERT INTO [municipality] ([name]) VALUES 
 ('Braga'), ('Porto'), ('Lisboa'), ('Évora'), ('Viana do Castelo'), ('Bragança');
@@ -558,11 +442,11 @@ GO
 
 -- 9. Vehicle
 INSERT INTO [vehicle] ([id_client], [licence_plate], [country]) VALUES 
-(3, '12-AB-34', 'Portugal'), 
-(4, '56-CD-78', 'Portugal'), 
-(5, '90-EF-12', 'Portugal'), 
-(6, '34-GH-56', 'Portugal'), 
-(6, '78-IJ-90', 'Portugal'); 
+(3, '12-AB-34', 'Portugal'), -- Veículo do João Silva (associado à EcoDrive - ID 3)
+(4, '56-CD-78', 'Portugal'), -- Veículo da Ana Santos (associada à EcoDrive - ID 4)
+(5, '90-EF-12', 'Portugal'), -- Veículo do Carlos Ferreira (associado à VoltPower - ID 5)
+(6, '34-GH-56', 'Portugal'), -- Veículo da Maria Oliveira (particular independente - ID 6)
+(6, '78-IJ-90', 'Portugal');  -- Segundo veículo da Maria Oliveira (ID 6)
 GO
 
 -- 10. Maintenance
@@ -600,18 +484,24 @@ GO
 
 -- 13. Invoice
 INSERT INTO [invoice] ([id_client], [total_amount], [invoice_date], [payment_deadline], [payment_date], [status]) VALUES 
-(1, 6.41, '2026-06-06', '2026-06-20', '2026-06-15', 'paid'),
+-- Invoice 1: Client 1 (EcoDrive) covering charge sessions with status 'invoiced' (IDs 6 and 13)
+-- Charge 6: energy 18.30 * 0.35 tariff = 6.415 -> Let's totalize accurately based on the sessions
+(1, 22.45, '2026-06-16', '2026-06-30', '2026-06-25', 'paid'),
+
+-- Invoice 2: Client 6 (Maria Oliveira) covering her 'invoiced' session (ID 2)
+-- Charge 2: energy 40.00 * 0.35 tariff = 14.00
 (6, 14.00, '2026-06-05', '2026-06-20', NULL, 'pending'),
-(2, 45.83, '2026-06-12', '2026-06-26', '2026-06-20', 'paid'),
-(1, 16.03, '2026-06-15', '2026-06-30', NULL, 'pending');
+
+-- Invoice 3: Client 2 (VoltPower) covering her 'invoiced' session (ID 10)
+-- Charge 10: energy 70.50 * 0.65 tariff = 45.825 -> rounded to 45.83
+(2, 45.83, '2026-06-12', '2026-06-26', '2026-06-20', 'paid');
 GO
 
 -- 14. Invoice Item
 INSERT INTO [invoice_item] ([id_invoice], [id_charge_session], [charge_amount]) VALUES 
 (1, 6, 6.41),
 (2, 2, 14.00),
-(3, 10, 45.83),
-(4, 13, 16.03);
+(3, 10, 45.83)
 GO
 
 -- 15. Station Records
@@ -643,4 +533,181 @@ INSERT INTO [maintenance_records] ([id_maintenance], [field_changed], [previous_
 (2, 'status', 'open', 'in process', '2026-03-01 09:00:00', 'Technician assigned and dispatched to station S002'),
 (3, 'status', 'open', 'in process', '2026-03-02 15:00:00', 'Firmware download started remotely');
 GO
+
+
+-- STORAGE PROCEDURE STATION
+-- 1. CREATE Station
+DROP PROCEDURE IF EXISTS sp_insert_station;
+GO
+
+CREATE PROCEDURE sp_insert_station
+    @id_municipality INT,
+    @code VARCHAR(50),
+    @standard_power DECIMAL(10,2),
+    @fast_power DECIMAL(10,2),
+    @active BIT,
+    @registration_date DATETIME,
+    @cessation_date DATETIME = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+    
+    BEGIN TRY
+        IF EXISTS (SELECT [code] FROM [station] WHERE [code] = @code)
+        BEGIN;
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message INT;
+            SELECT @message = ERROR_MESSAGE();
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END
+
+        INSERT INTO [station] ([id_municipality], [code], [standard_power], [fast_power], [active], [registration_date], [cessation_date])
+        VALUES (@id_municipality, @code, @standard_power, @fast_power, @active, @registration_date, @cessation_date);
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- teste CREATE
+EXEC sp_insert_station 1, 'S020', 20, 100, 1, '2026-09-01', NULL
+GO
+
+-- 2. READ (get all Stations)
+DROP PROCEDURE IF EXISTS sp_get_all_stations
+GO
+
+CREATE PROCEDURE sp_get_all_stations
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM [station];
+END;
+GO
+
+---- teste GET ALL
+EXEC sp_get_all_stations
+GO
+
+-- 3. READ (get station by ID)
+DROP PROCEDURE IF EXISTS sp_get_stations_by_id
+GO
+
+CREATE PROCEDURE sp_get_stations_by_id
+    @id_station INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT * FROM [
+        station] 
+    WHERE [id_station] = @id_station;
+END;
+GO
+
+-- teste GET BY ID
+EXEC sp_get_stations_by_id 1
+GO
+
+-- 4. UPDATE Station
+DROP PROCEDURE IF EXISTS sp_update_station
+GO
+
+CREATE PROCEDURE sp_update_station
+    @id_station INT,
+    @id_municipality INT = NULL,
+    @code VARCHAR(50) = NULL,
+    @standard_power DECIMAL(10,2) = NULL,
+    @fast_power DECIMAL(10,2) = NULL,
+    @active BIT = NULL,
+    @cessation_date DATETIME = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT [id_station] FROM [station] WHERE [id_station] = @id_station)
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message INT;
+            SELECT @message = ERROR_MESSAGE();
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END
+
+        UPDATE [station]
+        SET 
+            [id_municipality] = ISNULL(@id_municipality, [id_municipality]),
+            [code] = ISNULL(@code, [code]),
+            [standard_power] = ISNULL(@standard_power, [standard_power]),
+            [fast_power] = ISNULL(@fast_power, [fast_power]),
+            [active] = ISNULL(@active, [active]),
+            [cessation_date] = ISNULL(@cessation_date, [cessation_date])
+        WHERE [id_station] = @id_station;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+--teste UPDATE
+EXEC sp_update_station 1, 1, 'S023', NULL, 100.00, NULL, NULL
+EXEC sp_get_all_stations
+GO
+
+-- 5. DELETE Station
+DROP PROCEDURE IF EXISTS sp_delete_station
+GO
+
+CREATE PROCEDURE sp_delete_station
+    @id_station INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT [id_station] FROM [station] WHERE [id_station] = @id_station)
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message INT;
+            SELECT @message = ERROR_MESSAGE();
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END
+
+        -- apagar as dependentes
+        DELETE FROM [station_connector] WHERE [id_station] = @id_station;
+
+        -- apagar station
+        DELETE FROM [station] WHERE [id_station] = @id_station;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- teste DELETE
+EXEC sp_delete_station 1
 
