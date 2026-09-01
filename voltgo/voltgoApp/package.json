@@ -2,9 +2,9 @@
   "name": "voltgo-management",
   "version": "1.0.0",
   "description": "Volt Go Electric Vehicle Charging Station Management System",
-  "main": "index.js",
+  "main": "main.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node main.js"
   },
   "dependencies": {
     "readline-sync": "^1.4.10"
