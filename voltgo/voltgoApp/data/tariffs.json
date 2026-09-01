@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "name": "Normal",
+    "chargeType": "standard",
+    "pricePerKwh": 0.35,
+    "activationFee": 0.5
+  },
+  {
+    "id": 2,
+    "name": "Premium",
+    "chargeType": "fast",
+    "pricePerKwh": 0.65,
+    "activationFee": 1
+  }
+]
