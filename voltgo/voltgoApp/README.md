@@ -132,7 +132,7 @@ Funcionamento: A criação de uma sessão paga de carregamento resulta no cálcu
 
 'src/clients.js' - Lógica de clientes e sistema de fidelidade
 
-'src/tariffs.js' - Lógica das tarifas e taxas aplicáveis
+'src/tariffs.js' - Lógica dos tarifários e taxas aplicáveis
 
 'src/charges.js' - Validação de horários e gestão de carregamentos
 

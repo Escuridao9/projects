@@ -1,8 +1,4 @@
-const {
-    municipalitiesByDistrict,
-    countryPrefixes,
-    licencePlateFormats
-} = require('./constants');
+const {municipalitiesByDistrict, countryPrefixes, licencePlateFormats} = require('./constants');
 
 function normalizeValue(value) {
     if (!value) return "";
