@@ -535,7 +535,12 @@ INSERT INTO [maintenance_records] ([id_maintenance], [field_changed], [previous_
 GO
 
 
--- STORAGE PROCEDURE STATION
+
+
+
+
+-- STORAGE PROCEDURE 
+
 -- 1. CREATE Station
 DROP PROCEDURE IF EXISTS sp_insert_station;
 GO
@@ -559,7 +564,7 @@ BEGIN
             DECLARE @severity INT;
             SELECT @severity = ERROR_SEVERITY();
             DECLARE @message INT;
-            SELECT @message = ERROR_MESSAGE();
+            SELECT @message = 'There''s already a station with that code.';
             DECLARE @state INT;
             SET @state = ERROR_STATE();
         THROW @severity, @message, @state
@@ -577,10 +582,6 @@ BEGIN
 END;
 GO
 
--- teste CREATE
-EXEC sp_insert_station 1, 'S020', 20, 100, 1, '2026-09-01', NULL
-GO
-
 -- 2. READ (get all Stations)
 DROP PROCEDURE IF EXISTS sp_get_all_stations
 GO
@@ -593,10 +594,6 @@ BEGIN
 END;
 GO
 
----- teste GET ALL
-EXEC sp_get_all_stations
-GO
-
 -- 3. READ (get station by ID)
 DROP PROCEDURE IF EXISTS sp_get_stations_by_id
 GO
@@ -607,14 +604,9 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    SELECT * FROM [
-        station] 
+    SELECT * FROM [station] 
     WHERE [id_station] = @id_station;
 END;
-GO
-
--- teste GET BY ID
-EXEC sp_get_stations_by_id 1
 GO
 
 -- 4. UPDATE Station
@@ -640,7 +632,7 @@ BEGIN
             DECLARE @severity INT;
             SELECT @severity = ERROR_SEVERITY();
             DECLARE @message INT;
-            SELECT @message = ERROR_MESSAGE();
+            SELECT @message = 'Station not found.';
             DECLARE @state INT;
             SET @state = ERROR_STATE();
         THROW @severity, @message, @state
@@ -665,13 +657,8 @@ BEGIN
 END;
 GO
 
---teste UPDATE
-EXEC sp_update_station 1, 1, 'S023', NULL, 100.00, NULL, NULL
-EXEC sp_get_all_stations
-GO
-
 -- 5. DELETE Station
-DROP PROCEDURE IF EXISTS sp_delete_station
+DROP PROCEDURE IF EXISTS sp_delete_station;
 GO
 
 CREATE PROCEDURE sp_delete_station
@@ -687,17 +674,36 @@ BEGIN
             DECLARE @severity INT;
             SELECT @severity = ERROR_SEVERITY();
             DECLARE @message INT;
-            SELECT @message = ERROR_MESSAGE();
+            SELECT @message = 'Station not found.';
             DECLARE @state INT;
             SET @state = ERROR_STATE();
         THROW @severity, @message, @state
-        END
+        END;
 
-        -- apagar as dependentes
-        DELETE FROM [station_connector] WHERE [id_station] = @id_station;
+        -- ver se existem charge_session associada aos conectores desta estação
+        IF EXISTS (
+            SELECT cs.[id_station], cs.[id_connector] 
+            FROM [charge_session]  AS cs
+            JOIN [station_connector] AS sc ON cs.[id_station] = sc.[id_station] AND cs.[id_connector] = sc.[id_connector]
+            WHERE sc.[id_station] = @id_station
+        )
+        BEGIN
+            DECLARE @severity1 INT;
+            SELECT @severity1 = ERROR_SEVERITY();
+            DECLARE @message1 VARCHAR(100);
+            SELECT @message1 = 'Cannot delete a station that has associated charge sessions.';
+            DECLARE @state1 INT;
+            SET @state1 = ERROR_STATE();
+        THROW @severity1, @message1, @state1
+        END;
 
-        -- apagar station
-        DELETE FROM [station] WHERE [id_station] = @id_station;
+        -- remover primeiro as associações na tabela intermédia
+        DELETE FROM [station_connector] 
+        WHERE [id_station] = @id_station;
+
+        -- apagar a estação
+        DELETE FROM [station] 
+        WHERE [id_station] = @id_station;
 
         COMMIT TRAN;
     END TRY
@@ -708,6 +714,163 @@ BEGIN
 END;
 GO
 
--- teste DELETE
-EXEC sp_delete_station 1
 
+-- STORAGE PROCEDURE CONNECTOR
+-- 1. CREATE Connector
+DROP PROCEDURE IF EXISTS sp_insert_connector;
+GO
+
+CREATE PROCEDURE sp_insert_connector
+    @name CHAR(3),
+    @description VARCHAR(250) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+    
+    BEGIN TRY
+        IF EXISTS (SELECT [name] FROM [connector] WHERE [name] = @name)
+        BEGIN;
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'There''s already a connector with that name.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        INSERT INTO [connector] ([name], [description])
+        VALUES (@name, @description);
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- 2. READ (get all Connectors)
+DROP PROCEDURE IF EXISTS sp_get_all_connectors
+GO
+
+CREATE PROCEDURE sp_get_all_connectors
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM [connector];
+END;
+GO
+
+-- 3. READ (get connector by ID)
+DROP PROCEDURE IF EXISTS sp_get_connector_by_id
+GO
+
+CREATE PROCEDURE sp_get_connector_by_id
+    @id_connector INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT * FROM [connector] 
+    WHERE [id_connector] = @id_connector;
+END;
+GO
+
+-- 4. UPDATE Connector
+DROP PROCEDURE IF EXISTS sp_update_connector
+GO
+
+CREATE PROCEDURE sp_update_connector
+    @id_connector INT,
+    @name CHAR(3) = NULL,
+    @description VARCHAR(250) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT [id_connector] FROM [connector] WHERE [id_connector] = @id_connector)
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'Connector not found.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        UPDATE [connector]
+        SET 
+            [name] = ISNULL(@name, [name]),
+            [description] = ISNULL(@description, [description])
+        WHERE [id_connector] = @id_connector;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- 5. DELETE Connector
+DROP PROCEDURE IF EXISTS sp_delete_connector
+GO
+
+CREATE PROCEDURE sp_delete_connector
+    @id_connector INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT [id_connector] FROM [connector] WHERE [id_connector] = @id_connector)
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'Connector not found.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        -- verificar se existem charge_session associadas a este conector
+        IF EXISTS (
+            SELECT [id_conector] 
+            FROM [charge_session] 
+            WHERE [id_connector] = @id_connector
+        )
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'Cannot delete a connector that has associated charge sessions.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        -- apagar primeiro as ligações na tabela intermédia (station_connector)
+        DELETE FROM [station_connector] 
+        WHERE [id_connector] = @id_connector;
+
+        -- apagar o conector 
+        DELETE FROM [connector] 
+        WHERE [id_connector] = @id_connector;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
