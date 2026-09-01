@@ -1,19 +1,25 @@
--- usar base dados do sistema
+
+-- ============================================================================
+-- Volt Go - sempre a carregar!
+-- ============================================================================
+
+-- ----------------------------------------------------------------------------
+-- 1. CONFIGURAÇÃO DA BASE DE DADOS E LIMPEZA PREVENTIVA
+-- ----------------------------------------------------------------------------
+
 USE master;
 GO
 
--- criar a nossa base dados (se ainda nao existir)
 IF NOT EXISTS(SELECT * FROM sys.databases WHERE NAME = 'bd_test')
 BEGIN
     CREATE DATABASE [bd_test];
 END
 GO
 
--- usar a nossa base de dados
 USE bd_test
 GO
 
--- limpeza preventiva
+-- limpeza de tabelas por ordem inversa de dependência (FKs)
 DROP TABLE IF EXISTS [maintenance_records];
 DROP TABLE IF EXISTS [charge_session_records];
 DROP TABLE IF EXISTS [tariff_records];
@@ -35,7 +41,11 @@ DROP TABLE IF EXISTS [connector];
 DROP TABLE IF EXISTS [municipality];  
 GO
 
--- criação de tabelas
+-- ----------------------------------------------------------------------------
+-- 2. CRIAÇÃO DE TABELAS 
+-- ----------------------------------------------------------------------------
+
+-- tabela concelho (municipality)
 CREATE TABLE [municipality] (
     [id_municipality] INT IDENTITY(1,1), 
     [name] VARCHAR(100) NOT NULL,
@@ -45,6 +55,7 @@ CREATE TABLE [municipality] (
     CONSTRAINT CHK_municipality_name CHECK (TRIM([name]) <> ''));
 GO
 
+-- tabela conector (connector)
 CREATE TABLE [connector] (
     [id_connector] INT IDENTITY(1,1),
     [name] CHAR(3) NOT NULL,
@@ -57,6 +68,7 @@ CREATE TABLE [connector] (
     CONSTRAINT CHK_connector_description CHECK ([description] IS NULL OR TRIM([description]) <> ''));
 GO
 
+-- tabela papel do cliente (role)
 CREATE TABLE [role] (
     [id_role] INT IDENTITY(1,1),
     [name] VARCHAR(50) NOT NULL,
@@ -68,6 +80,7 @@ CREATE TABLE [role] (
     CONSTRAINT CHK_role_observations CHECK ([observations] IS NULL OR TRIM([observations]) <> ''));
 GO
 
+-- tabela tarifário (tariff)
 CREATE TABLE [tariff] (
     [id_tariff] INT IDENTITY(1,1),
     [name] VARCHAR(50) NOT NULL,
@@ -95,12 +108,15 @@ CREATE TABLE [tariff] (
         ([active] = 0 AND [cessation_date] IS NOT NULL)));
 GO
 
--- para garantir que apenas 1 versão ativa por nome de tarifa)
+-- Índice filtrado: permite que exista nomes duplicados em tarifas 
+-- inativas (versões antigas), mas assegura que só pode existir uma
+-- tarifa ativa com o mesmo nome em simultâneo.
 CREATE UNIQUE INDEX UQ_active_tariff_name 
 ON [tariff]([name]) 
 WHERE [active] = 1;
 GO
 
+-- tabela posto (station)
 CREATE TABLE [station] (
     [id_station] INT IDENTITY(1,1),
     [id_municipality] INT NOT NULL,
@@ -124,6 +140,7 @@ CREATE TABLE [station] (
         ));
 GO
 
+-- tabela cliente (client)
 CREATE TABLE [client] (
     [id_client] INT IDENTITY(1,1),
     [id_company] INT NULL,
@@ -166,6 +183,7 @@ CREATE TABLE [client] (
         ([active] = 0 AND [cessation_date] IS NOT NULL)));
 GO
 
+-- tabela de ligação posto-conector (station-connector)
 CREATE TABLE [station_connector] (
     [id_station] INT NOT NULL,
     [id_connector] INT NOT NULL,
@@ -175,6 +193,7 @@ CREATE TABLE [station_connector] (
     CONSTRAINT FK_station_connector_connector FOREIGN KEY ([id_connector]) REFERENCES [connector]([id_connector]));
 GO
 
+-- tabela de ligação cliente-papel (client-role)
 CREATE TABLE [client_role] (
     [id_client] INT NOT NULL,
     [id_role] INT NOT NULL,
@@ -184,6 +203,7 @@ CREATE TABLE [client_role] (
     CONSTRAINT FK_clientrole_role FOREIGN KEY ([id_role]) REFERENCES [role]([id_role]));
 GO
 
+-- tabela veículo (vehicle)
 CREATE TABLE [vehicle] (
     [id_vehicle] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -197,6 +217,7 @@ CREATE TABLE [vehicle] (
     CONSTRAINT CHK_vehicle_country CHECK (TRIM([country]) <> ''));
 GO
 
+-- tabela manutenção (maintenance)
 CREATE TABLE [maintenance]  (
     [id_maintenance] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
@@ -219,6 +240,7 @@ CREATE TABLE [maintenance]  (
     CONSTRAINT CHK_maintenance_cost CHECK ([cost] IS NULL OR [cost] >= 0));
 GO
 
+-- tabela reserva (reservation)
 CREATE TABLE [reservation] (
     [id_reservation] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -235,6 +257,7 @@ CREATE TABLE [reservation] (
     CONSTRAINT CHK_reservation_status CHECK ([status] IN ('active', 'completed', 'cancelled', 'expired')));
 GO
 
+-- tabela carregamento (charge_session)
 CREATE TABLE [charge_session] (
     [id_charge] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
@@ -274,13 +297,14 @@ CREATE TABLE [charge_session] (
     CONSTRAINT CHK_charge_points CHECK ([points] >= 0));
 GO
 
--- Garante que uma reservation pode estar associada a no máximo uma charge_session.
--- Charge_sessions sem reservation (id_reservation = NULL) continuam a ser permitidas.
+-- Índice filtrado que garante que cada reserva pode 
+-- ser associada a UMA sessão de carregamento
 CREATE UNIQUE NONCLUSTERED INDEX UQ_charge_session_reservation 
 ON [charge_session]([id_reservation]) 
 WHERE [id_reservation] IS NOT NULL;
 GO
 
+-- tabela fatura (invoice)
 CREATE TABLE [invoice] (
     [id_invoice] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -300,6 +324,7 @@ CREATE TABLE [invoice] (
     CONSTRAINT CHK_invoice_status CHECK ([status] COLLATE Latin1_General_CS_AS IN ('pending', 'paid', 'cancelled', 'expired')));
 GO
 
+-- tabela linha da fatura (invoice item)
 CREATE TABLE [invoice_item] (
     [id_invoice_item] INT IDENTITY(1,1),
     [id_invoice] INT NOT NULL,
@@ -313,6 +338,7 @@ CREATE TABLE [invoice_item] (
     CONSTRAINT CHK_invoice_item_charge_amount CHECK ([charge_amount] >= 0));
 GO
 
+-- tabela de histórico para posto (station records)
 CREATE TABLE [station_records]  (
     [id_station_record] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
@@ -326,6 +352,7 @@ CREATE TABLE [station_records]  (
     CONSTRAINT FK_stationrecords_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]));
 GO
 
+-- tabela de histórico para cliente (client records)
 CREATE TABLE [client_records] (
     [id_client_record] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -341,6 +368,7 @@ CREATE TABLE [client_records] (
     CONSTRAINT CHK_client_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> ''));
 GO
 
+-- tabela de histórico para tarifário (tariff records)
 CREATE TABLE [tariff_records] (
     [id_tariff_record] INT IDENTITY(1,1),
     [id_tariff] INT NOT NULL,
@@ -356,6 +384,7 @@ CREATE TABLE [tariff_records] (
     CONSTRAINT CHK_tariff_records_version CHECK ([version] > 0));
 GO
 
+-- tabela de histórico para carregamento (charge records)
 CREATE TABLE [charge_session_records] (
     [id_charge_record] INT IDENTITY(1,1),
     [id_charge] INT NOT NULL,
@@ -369,6 +398,7 @@ CREATE TABLE [charge_session_records] (
     CONSTRAINT FK_charge_session_records_charge_session FOREIGN KEY ([id_charge]) REFERENCES [charge_session]([id_charge]));
 GO
 
+-- tabela de histórico para manutenção (maintenance records)
 CREATE TABLE [maintenance_records] (
     [id_maintenance_record] INT IDENTITY(1,1),
     [id_maintenance] INT NOT NULL,
@@ -382,7 +412,9 @@ CREATE TABLE [maintenance_records] (
     CONSTRAINT FK_maintenancerecords_maintenance FOREIGN KEY ([id_maintenance]) REFERENCES [maintenance]([id_maintenance]),);
 GO
 
--- INSERÇÃO DE DADOS
+-- ----------------------------------------------------------------------------
+-- 3. INSERÇÃO DE DADOS 
+-- ----------------------------------------------------------------------------
 
 -- 1. Municipality
 INSERT INTO [municipality] ([name]) VALUES 
@@ -534,7 +566,21 @@ INSERT INTO [maintenance_records] ([id_maintenance], [field_changed], [previous_
 (3, 'status', 'open', 'in process', '2026-03-02 15:00:00', 'Firmware download started remotely');
 GO
 
--- TRIGGER that gives points to client once invoiced gets paid
+-- ----------------------------------------------------------------------------
+-- 4. PROGRAMABILIDADE (TRIGGERS, FUNCTIONS E STORED PROCEDURES)
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+-- 4.1. TRIGGER
+-- Tabela de Aplicação: [invoice]
+-- Objetivo: Atribuir automaticamente pontos de fidelização ao cliente assim que 
+--           o estado de uma fatura é atualizado para 'paid' (pago).
+-- Lógica:
+--   1. Verifica se a coluna [status] foi alterada.
+--   2. Identifica faturas que transitaram para o estado 'paid'.
+--   3. Soma os pontos associados às sessões de carga contidas nos itens da fatura.
+--   4. Atualiza o saldo total de pontos na tabela [client].
+-- ----------------------------------------------------------------------------
 
 IF OBJECT_ID('trg_AwardPointsOnInvoicePaid', 'TR') IS NOT NULL
     DROP TRIGGER trg_AwardPointsOnInvoicePaid;
@@ -573,8 +619,11 @@ BEGIN
 END;
 GO
 
--- STORAGE PROCEDURE STATION
--- 1. CREATE Station
+-- ----------------------------------------------------------------------------
+-- 4.2. STORAGE PROCEDURES: STATION 
+-- ----------------------------------------------------------------------------
+
+-- 4.2.1. CREATE Station
 DROP PROCEDURE IF EXISTS sp_insert_station;
 GO
 
@@ -597,7 +646,7 @@ BEGIN
             DECLARE @severity INT;
             SELECT @severity = ERROR_SEVERITY();
             DECLARE @message INT;
-            SELECT @message = ERROR_MESSAGE();
+            SELECT @message = 'There''s already a station with that code.';
             DECLARE @state INT;
             SET @state = ERROR_STATE();
         THROW @severity, @message, @state
@@ -615,11 +664,7 @@ BEGIN
 END;
 GO
 
--- teste CREATE
-EXEC sp_insert_station 1, 'S020', 20, 100, 1, '2026-09-01', NULL
-GO
-
--- 2. READ (get all Stations)
+-- 4.2.2. READ (get all stations)
 DROP PROCEDURE IF EXISTS sp_get_all_stations
 GO
 
@@ -631,11 +676,7 @@ BEGIN
 END;
 GO
 
----- teste GET ALL
-EXEC sp_get_all_stations
-GO
-
--- 3. READ (get station by ID)
+-- 4.2.3. READ (get station by ID)
 DROP PROCEDURE IF EXISTS sp_get_stations_by_id
 GO
 
@@ -645,17 +686,12 @@ AS
 BEGIN
     SET NOCOUNT ON;
     
-    SELECT * FROM [
-        station] 
+    SELECT * FROM [station] 
     WHERE [id_station] = @id_station;
 END;
 GO
 
--- teste GET BY ID
-EXEC sp_get_stations_by_id 1
-GO
-
--- 4. UPDATE Station
+-- 4.2.4. UPDATE Station
 DROP PROCEDURE IF EXISTS sp_update_station
 GO
 
@@ -678,7 +714,7 @@ BEGIN
             DECLARE @severity INT;
             SELECT @severity = ERROR_SEVERITY();
             DECLARE @message INT;
-            SELECT @message = ERROR_MESSAGE();
+            SELECT @message = 'Station not found.';
             DECLARE @state INT;
             SET @state = ERROR_STATE();
         THROW @severity, @message, @state
@@ -703,13 +739,8 @@ BEGIN
 END;
 GO
 
---teste UPDATE
-EXEC sp_update_station 1, 1, 'S023', NULL, 100.00, NULL, NULL
-EXEC sp_get_all_stations
-GO
-
--- 5. DELETE Station
-DROP PROCEDURE IF EXISTS sp_delete_station
+-- 4.2.5. DELETE Station
+DROP PROCEDURE IF EXISTS sp_delete_station;
 GO
 
 CREATE PROCEDURE sp_delete_station
@@ -725,17 +756,36 @@ BEGIN
             DECLARE @severity INT;
             SELECT @severity = ERROR_SEVERITY();
             DECLARE @message INT;
-            SELECT @message = ERROR_MESSAGE();
+            SELECT @message = 'Station not found.';
             DECLARE @state INT;
             SET @state = ERROR_STATE();
         THROW @severity, @message, @state
-        END
+        END;
 
-        -- apagar as dependentes
-        DELETE FROM [station_connector] WHERE [id_station] = @id_station;
+        -- ver se existem charge_session associada aos conectores desta estação
+        IF EXISTS (
+            SELECT cs.[id_station], cs.[id_connector] 
+            FROM [charge_session]  AS cs
+            JOIN [station_connector] AS sc ON cs.[id_station] = sc.[id_station] AND cs.[id_connector] = sc.[id_connector]
+            WHERE sc.[id_station] = @id_station
+        )
+        BEGIN
+            DECLARE @severity1 INT;
+            SELECT @severity1 = ERROR_SEVERITY();
+            DECLARE @message1 VARCHAR(100);
+            SELECT @message1 = 'Cannot delete a station that has associated charge sessions.';
+            DECLARE @state1 INT;
+            SET @state1 = ERROR_STATE();
+        THROW @severity1, @message1, @state1
+        END;
 
-        -- apagar station
-        DELETE FROM [station] WHERE [id_station] = @id_station;
+        -- remover primeiro as associações na tabela intermédia
+        DELETE FROM [station_connector] 
+        WHERE [id_station] = @id_station;
+
+        -- apagar a estação
+        DELETE FROM [station] 
+        WHERE [id_station] = @id_station;
 
         COMMIT TRAN;
     END TRY
@@ -746,10 +796,177 @@ BEGIN
 END;
 GO
 
--- teste DELETE
-EXEC sp_delete_station 1
+-- ----------------------------------------------------------------------------
+-- 4.3. STORAGE PROCEDURES: STATION 
+-- ----------------------------------------------------------------------------
 
+-- 4.3.1. CREATE Connector
+DROP PROCEDURE IF EXISTS sp_insert_connector;
 GO
+
+CREATE PROCEDURE sp_insert_connector
+    @name CHAR(3),
+    @description VARCHAR(250) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+    
+    BEGIN TRY
+        IF EXISTS (SELECT [name] FROM [connector] WHERE [name] = @name)
+        BEGIN;
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'There''s already a connector with that name.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        INSERT INTO [connector] ([name], [description])
+        VALUES (@name, @description);
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- 4.3.2. READ (get all Connectors)
+DROP PROCEDURE IF EXISTS sp_get_all_connectors
+GO
+
+CREATE PROCEDURE sp_get_all_connectors
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SELECT * FROM [connector];
+END;
+GO
+
+-- 4.3.3. READ (get connector by ID)
+DROP PROCEDURE IF EXISTS sp_get_connector_by_id
+GO
+
+CREATE PROCEDURE sp_get_connector_by_id
+    @id_connector INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    
+    SELECT * FROM [connector] 
+    WHERE [id_connector] = @id_connector;
+END;
+GO
+
+-- 4.3.4. UPDATE Connector
+DROP PROCEDURE IF EXISTS sp_update_connector
+GO
+
+CREATE PROCEDURE sp_update_connector
+    @id_connector INT,
+    @name CHAR(3) = NULL,
+    @description VARCHAR(250) = NULL
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT [id_connector] FROM [connector] WHERE [id_connector] = @id_connector)
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'Connector not found.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        UPDATE [connector]
+        SET 
+            [name] = ISNULL(@name, [name]),
+            [description] = ISNULL(@description, [description])
+        WHERE [id_connector] = @id_connector;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- 4.3.5. DELETE Connector
+DROP PROCEDURE IF EXISTS sp_delete_connector
+GO
+
+CREATE PROCEDURE sp_delete_connector
+    @id_connector INT
+AS
+BEGIN
+    SET NOCOUNT ON;
+    BEGIN TRAN;
+
+    BEGIN TRY
+        IF NOT EXISTS (SELECT [id_connector] FROM [connector] WHERE [id_connector] = @id_connector)
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'Connector not found.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        -- verificar se existem charge_session associadas a este conector
+        IF EXISTS (
+            SELECT [id_conector] 
+            FROM [charge_session] 
+            WHERE [id_connector] = @id_connector
+        )
+        BEGIN
+            DECLARE @severity INT;
+            SELECT @severity = ERROR_SEVERITY();
+            DECLARE @message VARCHAR(100);
+            SELECT @message = 'Cannot delete a connector that has associated charge sessions.';
+            DECLARE @state INT;
+            SET @state = ERROR_STATE();
+        THROW @severity, @message, @state
+        END;
+
+        -- apagar primeiro as ligações na tabela intermédia (station_connector)
+        DELETE FROM [station_connector] 
+        WHERE [id_connector] = @id_connector;
+
+        -- apagar o conector 
+        DELETE FROM [connector] 
+        WHERE [id_connector] = @id_connector;
+
+        COMMIT TRAN;
+    END TRY
+    BEGIN CATCH
+        ROLLBACK TRAN;
+        THROW;
+    END CATCH
+END;
+GO
+
+-- ----------------------------------------------------------------------------
+-- 4.4. FUNCTION
+-- Objetivo: Calcular a média de dias de indisponibilidade (downtime) de um posto.
+-- Lógica:
+--   1. Filtra as manutenções do posto que já estão resolvidas e têm data de fim.
+--   2. Calcula a duração de cada intervenção em minutos e converte para dias.
+--   3. Retorna a média desses valores ou 0.00 caso não existam registos.
+-- ----------------------------------------------------------------------------
 
 IF OBJECT_ID('fn_GetAverageStationDowntimeDays', 'FN') IS NOT NULL
     DROP FUNCTION fn_GetAverageStationDowntimeDays;
@@ -774,6 +991,11 @@ GO
 SELECT dbo.fn_GetAverageStationDowntimeDays(1) AS avg_downtime_days;
 GO
 
+
+-- ----------------------------------------------------------------------------
+-- 5. RELATÓRIOS
+-- ----------------------------------------------------------------------------
+
 -- ============================================================================
 -- RELATÓRIO 1: Carregamentos por tipo de conector
 -- Lista todos os tipos de conector, o número de carregamentos associados a cada um,
@@ -782,6 +1004,7 @@ GO
 -- Justificação do LEFT JOIN: Utiliza-se LEFT JOIN para garantir que tipos de conector 
 -- que ainda não foram utilizados em nenhuma sessão de carregamento continuem a ser 
 -- listados no relatório com contagem igual a 0.
+
 SELECT 
     c.[id_connector],
     c.[name] AS connector_type,
@@ -806,12 +1029,13 @@ GO
 -- ============================================================================
 -- Justificação do LEFT JOIN: O LEFT JOIN garante que postos recentemente instalados 
 -- ou sem registo de carregamentos 'terminated' fiquem visíveis com contagem igual a 0.
+
 SELECT 
     s.[id_station],
     s.[code] AS station_code,
     COUNT(cs.[id_charge]) AS terminated_charge_sessions
-FROM [station] s
-LEFT JOIN [charge_session] cs 
+FROM [station] AS s
+LEFT JOIN [charge_session] AS cs 
     ON s.[id_station] = cs.[id_station] 
    AND cs.[status] = 'terminated'
 GROUP BY 
@@ -829,6 +1053,7 @@ GO
 -- ============================================================================
 -- Justificação do INNER JOIN: Usa-se INNER JOIN porque o cálculo do custo médio exige 
 -- estritamente que existam sessões de carregamento faturadas associadas aos tarifários.
+
 SELECT 
     t.[id_tariff],
     t.[name] AS tariff_name,
@@ -856,6 +1081,7 @@ GO
 -- ============================================================================
 -- Justificação do LEFT JOIN: Permite listar a totalidade da base de clientes, mesmo 
 -- aqueles que ainda não realizaram qualquer carregamento.
+
 SELECT 
     c.[id_client],
     CONCAT(c.[first_name], ' ', c.[last_name]) AS client_name,
@@ -882,6 +1108,7 @@ GO
 -- Justificação do LEFT JOIN: Utilizam-se múltiplos LEFT JOINs encadeados para garantir 
 -- que carregamentos em curso, cancelados ou pendentes de faturação apareçam na 
 -- listagem com contagem de pagamento igual a 0.
+
 SELECT 
     cs.[id_charge],
     cs.[start_date_hour],
@@ -907,6 +1134,7 @@ GO
 -- ============================================================================
 -- Justificação do LEFT JOIN: Utiliza-se LEFT JOIN a partir de concelho para permitir 
 -- a agregação financeira completa e prevenir perda de dados de postos sem faturas.
+
 SELECT 
     m.[id_municipality],
     m.[name] AS municipality_name,
@@ -933,6 +1161,7 @@ GO
 -- ============================================================================
 -- Justificação do LEFT JOIN: Permite incluir todos os postos da rede na listagem,
 -- garantindo que postos sem histórico de manutenção não fiquem de fora do relatório.
+
 SELECT TOP 10
     s.[id_station],
     s.[code] AS station_code,
@@ -949,6 +1178,7 @@ GO
 
 
 -- Relatório Estratégico: Taxa de Ineficiência e Expiração de Reservas por Posto
+
 SELECT 
     s.[id_station],
     s.[code] AS station_code,
