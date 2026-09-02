@@ -566,7 +566,7 @@ INSERT INTO [maintenance_records] ([id_maintenance], [field_changed], [previous_
 GO
 
 -- ----------------------------------------------------------------------------
--- 4. PROGRAMABILIDADE (VIEWS, TRIGGERS, FUNCTIONS E STORED PROCEDURES)
+-- 4. VIEWS, TRIGGERS, STORED PROCEDURES E FUNCTIONS
 -- ----------------------------------------------------------------------------
 
 -- ----------------------------------------------------------------------------
@@ -644,7 +644,7 @@ END;
 GO
 
 -- ----------------------------------------------------------------------------
--- 4.3. STORAGE PROCEDURES: POSTO
+-- 4.3. STORAGE PROCEDURES: POSTO (STATION)
 -- Contém o conjunto de procedimentos para realizar as operações de CRUD 
 -- (Create, Read, Update e Delete) na tabela de postos [station], garantindo a 
 -- integridade dos dados e tratamento de erros.
@@ -824,7 +824,7 @@ END;
 GO
 
 -- ----------------------------------------------------------------------------
--- 4.4. STORAGE PROCEDURES: CONETOR
+-- 4.4. STORAGE PROCEDURES: CONETOR (CONNECTOR)
 -- Contém o conjunto de procedimentos para realizar as operações de CRUD 
 -- (Create, Read, Update e Delete) na tabela de conectores [connector], incluindo
 --  validações preventivas de duplicados, verificação de dependências em sessões 
