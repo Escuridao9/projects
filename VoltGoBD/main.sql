@@ -44,7 +44,7 @@ GO
 -- 2. CRIAÇÃO DE TABELAS 
 -- ----------------------------------------------------------------------------
 
--- tabela concelho (municipality)
+-- 2.1. concelho (municipality)
 CREATE TABLE [municipality] (
     [id_municipality] INT IDENTITY(1,1), 
     [name] VARCHAR(100) NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE [municipality] (
     CONSTRAINT CHK_municipality_name CHECK (TRIM([name]) <> ''));
 GO
 
--- tabela conector (connector)
+-- 2.2. conector (connector)
 CREATE TABLE [connector] (
     [id_connector] INT IDENTITY(1,1),
     [name] CHAR(3) NOT NULL,
@@ -67,7 +67,7 @@ CREATE TABLE [connector] (
     CONSTRAINT CHK_connector_description CHECK ([description] IS NULL OR TRIM([description]) <> ''));
 GO
 
--- tabela papel do cliente (role)
+-- 2.3. papel do cliente (role)
 CREATE TABLE [role] (
     [id_role] INT IDENTITY(1,1),
     [name] VARCHAR(50) NOT NULL,
@@ -79,7 +79,7 @@ CREATE TABLE [role] (
     CONSTRAINT CHK_role_observations CHECK ([observations] IS NULL OR TRIM([observations]) <> ''));
 GO
 
--- tabela tarifário (tariff)
+-- 2.4. tarifário (tariff)
 CREATE TABLE [tariff] (
     [id_tariff] INT IDENTITY(1,1),
     [name] VARCHAR(50) NOT NULL,
@@ -115,7 +115,7 @@ ON [tariff]([name])
 WHERE [active] = 1;
 GO
 
--- tabela posto (station)
+-- 2.5. posto (station)
 CREATE TABLE [station] (
     [id_station] INT IDENTITY(1,1),
     [id_municipality] INT NOT NULL,
@@ -139,7 +139,7 @@ CREATE TABLE [station] (
         ));
 GO
 
--- tabela cliente (client)
+-- 2.6. cliente (client)
 CREATE TABLE [client] (
     [id_client] INT IDENTITY(1,1),
     [id_company] INT NULL,
@@ -182,7 +182,7 @@ CREATE TABLE [client] (
         ([active] = 0 AND [cessation_date] IS NOT NULL)));
 GO
 
--- tabela de ligação posto-conector (station-connector)
+-- 2.7. posto-conector (station-connector)
 CREATE TABLE [station_connector] (
     [id_station] INT NOT NULL,
     [id_connector] INT NOT NULL,
@@ -192,7 +192,7 @@ CREATE TABLE [station_connector] (
     CONSTRAINT FK_station_connector_connector FOREIGN KEY ([id_connector]) REFERENCES [connector]([id_connector]));
 GO
 
--- tabela de ligação cliente-papel (client-role)
+-- 2.8. cliente-papel (client-role)
 CREATE TABLE [client_role] (
     [id_client] INT NOT NULL,
     [id_role] INT NOT NULL,
@@ -202,7 +202,7 @@ CREATE TABLE [client_role] (
     CONSTRAINT FK_clientrole_role FOREIGN KEY ([id_role]) REFERENCES [role]([id_role]));
 GO
 
--- tabela veículo (vehicle)
+-- 2.9. veículo (vehicle)
 CREATE TABLE [vehicle] (
     [id_vehicle] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -216,7 +216,7 @@ CREATE TABLE [vehicle] (
     CONSTRAINT CHK_vehicle_country CHECK (TRIM([country]) <> ''));
 GO
 
--- tabela manutenção (maintenance)
+-- 2.10. manutenção (maintenance)
 CREATE TABLE [maintenance]  (
     [id_maintenance] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
@@ -239,7 +239,7 @@ CREATE TABLE [maintenance]  (
     CONSTRAINT CHK_maintenance_cost CHECK ([cost] IS NULL OR [cost] >= 0));
 GO
 
--- tabela reserva (reservation)
+-- 2.11. reserva (reservation)
 CREATE TABLE [reservation] (
     [id_reservation] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -256,7 +256,7 @@ CREATE TABLE [reservation] (
     CONSTRAINT CHK_reservation_status CHECK ([status] IN ('active', 'completed', 'cancelled', 'expired')));
 GO
 
--- tabela carregamento (charge_session)
+-- 2.12. carregamento (charge_session)
 CREATE TABLE [charge_session] (
     [id_charge] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
@@ -303,7 +303,7 @@ ON [charge_session]([id_reservation])
 WHERE [id_reservation] IS NOT NULL;
 GO
 
--- tabela fatura (invoice)
+-- 2.13. fatura (invoice)
 CREATE TABLE [invoice] (
     [id_invoice] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -323,7 +323,7 @@ CREATE TABLE [invoice] (
     CONSTRAINT CHK_invoice_status CHECK ([status] COLLATE Latin1_General_CS_AS IN ('pending', 'paid', 'cancelled', 'expired')));
 GO
 
--- tabela linha da fatura (invoice item)
+-- 2.14. linha da fatura (invoice item)
 CREATE TABLE [invoice_item] (
     [id_invoice_item] INT IDENTITY(1,1),
     [id_invoice] INT NOT NULL,
@@ -337,7 +337,7 @@ CREATE TABLE [invoice_item] (
     CONSTRAINT CHK_invoice_item_charge_amount CHECK ([charge_amount] >= 0));
 GO
 
--- tabela de histórico para posto (station records)
+-- 2.15. histórico para posto (station records)
 CREATE TABLE [station_records]  (
     [id_station_record] INT IDENTITY(1,1),
     [id_station] INT NOT NULL,
@@ -351,7 +351,7 @@ CREATE TABLE [station_records]  (
     CONSTRAINT FK_stationrecords_station FOREIGN KEY ([id_station]) REFERENCES [station]([id_station]));
 GO
 
--- tabela de histórico para cliente (client records)
+-- 2.16. histórico para cliente (client records)
 CREATE TABLE [client_records] (
     [id_client_record] INT IDENTITY(1,1),
     [id_client] INT NOT NULL,
@@ -367,7 +367,7 @@ CREATE TABLE [client_records] (
     CONSTRAINT CHK_client_records_obs CHECK ([observations] IS NULL OR TRIM([observations]) <> ''));
 GO
 
--- tabela de histórico para tarifário (tariff records)
+-- 2.17. histórico para tarifário (tariff records)
 CREATE TABLE [tariff_records] (
     [id_tariff_record] INT IDENTITY(1,1),
     [id_tariff] INT NOT NULL,
@@ -383,7 +383,7 @@ CREATE TABLE [tariff_records] (
     CONSTRAINT CHK_tariff_records_version CHECK ([version] > 0));
 GO
 
--- tabela de histórico para carregamento (charge records)
+-- 2.18. histórico para carregamento (charge records)
 CREATE TABLE [charge_session_records] (
     [id_charge_record] INT IDENTITY(1,1),
     [id_charge] INT NOT NULL,
@@ -397,7 +397,7 @@ CREATE TABLE [charge_session_records] (
     CONSTRAINT FK_charge_session_records_charge_session FOREIGN KEY ([id_charge]) REFERENCES [charge_session]([id_charge]));
 GO
 
--- tabela de histórico para manutenção (maintenance records)
+-- 2.19. histórico para manutenção (maintenance records)
 CREATE TABLE [maintenance_records] (
     [id_maintenance_record] INT IDENTITY(1,1),
     [id_maintenance] INT NOT NULL,
@@ -415,12 +415,12 @@ GO
 -- 3. INSERÇÃO DE DADOS 
 -- ----------------------------------------------------------------------------
 
--- 1. Municipality
+-- 3.1. Municipality
 INSERT INTO [municipality] ([name]) VALUES 
 ('Braga'), ('Porto'), ('Lisboa'), ('Évora'), ('Viana do Castelo'), ('Bragança');
 GO
 
--- 2. Connector
+-- 3.2. Connector
 INSERT INTO [connector] ([name], [description]) VALUES 
 ('CCS', 'Combined Charging System - Fast DC standard in Europe'),
 ('CHA', 'CHAdeMO - Japanese fast DC standard'),
@@ -428,21 +428,21 @@ INSERT INTO [connector] ([name], [description]) VALUES
 ('TYP', 'Type 2 Mennekes - European AC three-phase standard');
 GO
 
--- 3. Role
+-- 3.3. Role
 INSERT INTO [role] ([name], [observations]) VALUES 
 ('account holder', 'Account owner responsible for the subscription'),
 ('driver', 'Vehicle driver conducting charge sessions'),
 ('paying entity', 'Entity responsible for invoice payments');
 GO
 
--- 4. Tariff
+-- 3.4. Tariff
 INSERT INTO [tariff] ([name], [version], [charge_type], [price], [activation_fee], [active], [registration_date], [cessation_date]) VALUES 
 ('Normal', 1, 'standard', 0.35, 0.50, 1, '2025-01-01 00:00:00', NULL),
 ('Premium', 1, 'fast', 0.55, 1.00, 0, '2024-01-01 00:00:00', '2024-12-31 23:59:59'),
 ('Premium', 2, 'fast', 0.65, 1.00, 1, '2025-01-01 00:00:00', NULL);
 GO
 
--- 5. Client
+-- 3.5. Client
 INSERT INTO [client] ([id_company], [id_tariff], [first_name], [last_name], [tif], [sex], [dob], [address], [email], [type], [total_points], [active], [registration_date], [cessation_date]) VALUES 
 (NULL, 1, 'EcoDrive', 'Lda.', '501234567', 'N', NULL, 'Avenida Central 100, Porto', 'geral@ecodrive.pt', 'company', 250, 1, '2025-01-01 00:00:00', NULL),
 (NULL, 2, 'VoltPower', 'S.A.', '509876543', 'N', NULL, 'Praça do Comércio 50, Lisboa', 'contacto@voltpower.pt', 'company', 100, 1, '2025-01-01 00:00:00', NULL),
@@ -452,7 +452,7 @@ INSERT INTO [client] ([id_company], [id_tariff], [first_name], [last_name], [tif
 (NULL, 1, 'Maria', 'Oliveira', '456789012', 'F', '1995-12-30', 'Rua da Republica 80, Coimbra', 'maria.oliveira@email.com', 'individual', 50, 1, '2025-01-05 00:00:00', NULL);
 GO
 
--- 6. Station
+-- 3.6. Station
 INSERT INTO [station] ([id_municipality], [code], [standard_power], [fast_power], [active], [registration_date], [cessation_date]) VALUES 
 (1, 'S001', 20.00, 100.00, 1, '2025-01-01 00:00:00', NULL), 
 (2, 'S002', 20.00, 100.00, 1, '2025-01-01 00:00:00', NULL), 
@@ -461,17 +461,17 @@ INSERT INTO [station] ([id_municipality], [code], [standard_power], [fast_power]
 (4, 'S005', 30.00, 150.00, 1, '2025-01-05 00:00:00', NULL); 
 GO
 
--- 7. Station Connector
+-- 3.7. Station Connector
 INSERT INTO [station_connector] ([id_station], [id_connector]) VALUES 
 (1, 1), (1, 2), (2, 1), (2, 2), (3, 1), (3, 2), (4, 1), (4, 2), (5, 1), (5, 2);
 GO
 
--- 8. Client Role
+-- 3.8. Client Role
 INSERT INTO [client_role] ([id_client], [id_role]) VALUES 
 (1, 3), (2, 3), (3, 3), (4, 2), (5, 1);
 GO
 
--- 9. Vehicle
+-- 3.9. Vehicle
 INSERT INTO [vehicle] ([id_client], [licence_plate], [country]) VALUES 
 (3, '12-AB-34', 'Portugal'), -- Veículo do João Silva (associado à EcoDrive - ID 3)
 (4, '56-CD-78', 'Portugal'), -- Veículo da Ana Santos (associada à EcoDrive - ID 4)
@@ -480,7 +480,7 @@ INSERT INTO [vehicle] ([id_client], [licence_plate], [country]) VALUES
 (6, '78-IJ-90', 'Portugal');  -- Segundo veículo da Maria Oliveira (ID 6)
 GO
 
--- 10. Maintenance
+-- 3.10. Maintenance
 INSERT INTO [maintenance] ([id_station], [type], [description], [status], [start_date], [end_date], [cost]) VALUES 
 (1, 'repair', 'Replacement of damaged CCS connector at station S001', 'resolved', '2025-01-10 08:30:00', '2025-01-10 12:00:00', 150.00),
 (2, 'inspection', 'Routine periodic inspection at station S002', 'in process', '2026-03-01 09:00:00', NULL, NULL),
@@ -488,7 +488,7 @@ INSERT INTO [maintenance] ([id_station], [type], [description], [status], [start
 (5, 'repair', 'Repair of the display panel at station S005', 'resolved', '2025-02-01 10:00:00', '2025-02-02 16:30:00', 320.50);
 GO
 
--- 11. Reservation
+-- 3.11. Reservation
 INSERT INTO [reservation] ([id_client], [id_station], [registration_date], [start_date_hour], [end_date_hour], [status]) VALUES 
 (3, 1, '2026-06-01 10:00:00', '2026-06-01 10:30:00', '2026-06-01 11:30:00', 'active'),
 (4, 2, '2026-06-02 14:00:00', '2026-06-02 15:00:00', '2026-06-02 16:00:00', 'completed'),
@@ -496,7 +496,7 @@ INSERT INTO [reservation] ([id_client], [id_station], [registration_date], [star
 (6, 5, '2026-06-04 08:00:00', '2026-06-04 09:00:00', '2026-06-04 10:00:00', 'expired');
 GO
 
--- 12. Charge Session
+-- 3.12. Charge Session
 INSERT INTO [charge_session] ([id_station], [id_connector], [id_client], [id_driver], [id_vehicle], [id_tariff], [id_reservation], [version_tariff], [price_tariff], [start_date_hour], [end_date_hour], [energy], [status], [points]) VALUES 
 (2, 1, 1, 4, 2, 1, 2, 1, 0.35, '2026-06-02 15:00:00', '2026-06-02 16:00:00', 25.50, 'terminated', 9),
 (5, 2, 6, 6, 4, 1, NULL, 1, 0.35, '2026-06-04 09:00:00', '2026-06-04 10:00:00', 40.00, 'invoiced', 14),
@@ -513,7 +513,7 @@ INSERT INTO [charge_session] ([id_station], [id_connector], [id_client], [id_dri
 (5, 1, 1, 4, 2, 1, NULL, 1, 0.35, '2026-06-14 16:00:00', '2026-06-14 17:10:00', 45.80, 'invoiced', 16);
 GO
 
--- 13. Invoice
+-- 3.13. Invoice
 INSERT INTO [invoice] ([id_client], [total_amount], [invoice_date], [payment_deadline], [payment_date], [status]) VALUES 
 -- Invoice 1: Client 1 (EcoDrive) covering charge sessions with status 'invoiced' (IDs 6 and 13)
 -- Charge 6: energy 18.30 * 0.35 tariff = 6.415 -> Let's totalize accurately based on the sessions
@@ -528,38 +528,38 @@ INSERT INTO [invoice] ([id_client], [total_amount], [invoice_date], [payment_dea
 (2, 45.83, '2026-06-12', '2026-06-26', '2026-06-20', 'paid');
 GO
 
--- 14. Invoice Item
+-- 3.14. Invoice Item
 INSERT INTO [invoice_item] ([id_invoice], [id_charge_session], [charge_amount]) VALUES 
 (1, 6, 6.41),
 (2, 2, 14.00),
 (3, 10, 45.83)
 GO
 
--- 15. Station Records
+-- 3.15. Station Records
 INSERT INTO [station_records] ([id_station], [field_changed], [previous_value], [new_value], [modification_date], [observations]) VALUES 
 (1, 'standard_power', '15.00', '20.00', '2025-06-01 10:00:00', 'Upgrade of station standard power capacity'),
 (4, 'active', '1', '0', '2024-01-10 10:00:00', 'Station deactivated due to scheduled relocation');
 GO
 
--- 16. Client Records
+-- 3.16. Client Records
 INSERT INTO [client_records] ([id_client], [field_changed], [previous_value], [new_value], [modification_date], [observations]) VALUES 
 (1, 'address', 'Avenida Central 50, Porto', 'Avenida Central 100, Porto', '2025-02-01 09:30:00', 'Company headquarters address update'),
 (6, 'email', 'maria.old@email.com', 'maria.oliveira@email.com', '2025-03-15 14:20:00', 'Client requested email update');
 GO
 
--- 17. Tariff Records
+-- 3.17. Tariff Records
 INSERT INTO [tariff_records] ([id_tariff], [version], [field_changed], [previous_value], [new_value], [modification_date], [observations]) VALUES 
 (2, 1, 'price', '0.50', '0.55', '2024-06-01 00:00:00', 'Mid-year price adjustment for Premium v1'),
 (3, 2, 'price', '0.60', '0.65', '2025-06-01 00:00:00', 'Inflation adjustment for Premium v2');
 GO
 
--- 18. Charge Session Records
+-- 3.18. Charge Session Records
 INSERT INTO [charge_session_records] ([id_charge], [field_changed], [previous_value], [new_value], [modification_date], [observations]) VALUES 
 (3, 'status', 'in progress', 'terminated', '2026-09-01 01:00:00', 'Session finished manually by system override'),
 (7, 'status', 'in progress', 'terminated', '2026-09-01 01:15:00', 'Session ended normally upon full vehicle charge');
 GO
 
--- 19. Maintenance Records
+-- 3.19. Maintenance Records
 INSERT INTO [maintenance_records] ([id_maintenance], [field_changed], [previous_value], [new_value], [modification_date], [observations]) VALUES 
 (2, 'status', 'open', 'in process', '2026-03-01 09:00:00', 'Technician assigned and dispatched to station S002'),
 (3, 'status', 'open', 'in process', '2026-03-02 15:00:00', 'Firmware download started remotely');
@@ -571,39 +571,28 @@ GO
 
 -- ----------------------------------------------------------------------------
 -- 4.1. VIEW
--- Objetivo: : Agregar os dados operacionais das sessões de carregamento, cruzando-as
--- com as informações do posto, do cliente e do tarifário escolhido. 
+-- Objetivo: : Calcular o total de carregamentos e total de carregamentos por 
+-- estado, de cada posto. LEFT JOIN para garantir que postos sem atividade 
+-- aparecem sempre com o valor 0.
 -- ----------------------------------------------------------------------------
 
-CREATE OR ALTER VIEW vw_charging_session_detailed
+CREATE OR ALTER VIEW vw_report_station_charges_by_status
 AS
 SELECT 
-    cs.[id_charge],
-    cs.[start_date_hour],
-    cs.[end_date_hour],
-    cs.[energy],
-    cs.[status] AS charge_status,
-    cs.[points],
-    
     s.[id_station],
     s.[code] AS station_code,
-    s.[id_municipality],
 
-    cl.[id_client],
-    CONCAT(cl.[first_name], ' ', cl.[last_name]) AS client_name,
-    cl.[type] AS client_type,
-    
-    t.[id_tariff],
-    t.[name] AS tariff_name,
-    t.[version] AS tariff_version,
-    cs.[price_tariff]
-FROM [charge_session] AS cs
-INNER JOIN [station] AS s 
-ON cs.[id_station] = s.[id_station]
-INNER JOIN [client] AS cl 
-ON cs.[id_client] = cl.[id_client]
-INNER JOIN [tariff] AS t 
-ON cs.[id_tariff] = t.[id_tariff] AND cs.[version_tariff] = t.[version];
+    COUNT(cs.[id_charge]) AS total_sessions,
+    SUM(CASE WHEN cs.[status] = 'terminated' THEN 1 ELSE 0 END) AS terminated_sessions,
+    SUM(CASE WHEN cs.[status] = 'in process' THEN 1 ELSE 0 END) AS in_process_sessions,
+    SUM(CASE WHEN cs.[status] = 'open' THEN 1 ELSE 0 END) AS open_sessions
+
+FROM [station] AS s
+LEFT JOIN [charge_session] AS cs 
+    ON s.[id_station] = cs.[id_station]
+GROUP BY 
+    s.[id_station], 
+    s.[code]
 GO
 
 -- ----------------------------------------------------------------------------
