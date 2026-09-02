@@ -3063,6 +3063,10 @@ function showMaintenanceStatus() {
     }
 
     console.log(
+        `Stations under maintenance: ${countMaintenanceStations(stations, "under maintenance")}`
+    );
+
+    console.log(
         `Stations requiring maintenance: ${stationsDueForMaintenance.length}`
     );
 
@@ -3336,7 +3340,7 @@ function calculateAge(dob) {
         birthDate.getFullYear();
 
     const monthDifference =
-        today.getMonth() -
+        today.getMonth() 
         birthDate.getMonth();
 
     if (
@@ -3790,3 +3794,12 @@ function showReportsMenu() {
 }
 
 showMainMenu();
+
+function countMaintenanceStations (stations, status) {
+
+    if (!stations) return 0;
+
+    const reportStations = stations.filter(s => normalizeValue(s.status) === normalizeValue(status));
+
+    return reportStations.length
+};

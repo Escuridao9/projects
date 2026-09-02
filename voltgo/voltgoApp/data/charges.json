@@ -46,5 +46,53 @@
     "tariffId": 2,
     "cost": null,
     "status": "in process"
+  },
+  {
+    "id": 5,
+    "stationCode": "S002",
+    "clientId": 1,
+    "startDate": "2026-09-01T15:00",
+    "endDate": "2026-09-01T16:00",
+    "duration": 1,
+    "energy": 20,
+    "tariffId": 1,
+    "cost": 1.9,
+    "status": "terminated"
+  },
+  {
+    "id": 6,
+    "stationCode": "S002",
+    "clientId": 2,
+    "startDate": "2026-01-09T15:00",
+    "endDate": "2026-01-09T16:00",
+    "duration": 1,
+    "energy": 100,
+    "tariffId": 2,
+    "cost": 66,
+    "status": "terminated"
+  },
+  {
+    "id": 7,
+    "stationCode": "S001",
+    "clientId": 2,
+    "startDate": "2026-01-09T16:00",
+    "endDate": "2026-01-09T16:20",
+    "duration": 0.33,
+    "energy": 33,
+    "tariffId": 2,
+    "cost": 22.45,
+    "status": "invoiced"
+  },
+  {
+    "id": 8,
+    "stationCode": "S001",
+    "clientId": 2,
+    "startDate": "2026-05-26T10:00",
+    "endDate": "2026-05-26T11:30",
+    "duration": 1.5,
+    "energy": 30,
+    "tariffId": 1,
+    "cost": 2.6,
+    "status": "invoiced"
   }
 ]

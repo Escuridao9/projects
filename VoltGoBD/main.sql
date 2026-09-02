@@ -1,4 +1,3 @@
-
 -- ============================================================================
 -- Volt Go - sempre a carregar!
 -- ============================================================================
@@ -485,7 +484,7 @@ GO
 INSERT INTO [maintenance] ([id_station], [type], [description], [status], [start_date], [end_date], [cost]) VALUES 
 (1, 'repair', 'Replacement of damaged CCS connector at station S001', 'resolved', '2025-01-10 08:30:00', '2025-01-10 12:00:00', 150.00),
 (2, 'inspection', 'Routine periodic inspection at station S002', 'in process', '2026-03-01 09:00:00', NULL, NULL),
-(3, 'upgrade', 'Firmware update for the payment system at station S003', 'open', '2026-03-02 14:00:00', NULL, NULL),
+(3, 'upgrade', 'Firmware update for the payment system at station S003', 'in process', '2026-03-02 14:00:00', NULL, NULL),
 (5, 'repair', 'Repair of the display panel at station S005', 'resolved', '2025-02-01 10:00:00', '2025-02-02 16:30:00', 320.50);
 GO
 
@@ -576,7 +575,7 @@ GO
 -- com as informações do posto, do cliente e do tarifário escolhido. 
 -- ----------------------------------------------------------------------------
 
-CREATE OR ALTER VIEW vw_detalhe_carregamentos_geral
+CREATE OR ALTER VIEW vw_charging_session_detailed
 AS
 SELECT 
     cs.[id_charge],
@@ -976,12 +975,12 @@ BEGIN
             WHERE [id_connector] = @id_connector
         )
         BEGIN
-            DECLARE @severity INT;
-            SELECT @severity = ERROR_SEVERITY();
-            DECLARE @message VARCHAR(100);
-            SELECT @message = 'Cannot delete a connector that has associated charge sessions.';
-            DECLARE @state INT;
-            SET @state = ERROR_STATE();
+            DECLARE @severity1 INT;
+            SELECT @severity1 = ERROR_SEVERITY();
+            DECLARE @message1 VARCHAR(100);
+            SELECT @message1 = 'Cannot delete a connector that has associated charge sessions.';
+            DECLARE @state1 INT;
+            SET @state1 = ERROR_STATE();
         THROW @severity, @message, @state
         END;
 
@@ -1004,238 +1003,61 @@ GO
 
 -- ----------------------------------------------------------------------------
 -- 4.5. FUNCTION
--- Objetivo: Calcular a média de dias de indisponibilidade (downtime) de um posto.
--- Lógica:
---   1. Filtra as manutenções do posto que já estão resolvidas e têm data de fim.
---   2. Calcula a duração de cada intervenção em minutos e converte para dias.
---   3. Retorna a média desses valores ou 0.00 caso não existam registos.
+-- Objetivo: Calcular a percentagem do tempo que cada posto esteve inativo 
+-- comparativamente ao tempo de vida útil. Retorna uma listagem de todos os postos
+-- com a respetiva percentagem de manutenção.
 -- ----------------------------------------------------------------------------
-
-IF OBJECT_ID('fn_GetAverageStationDowntimeDays', 'FN') IS NOT NULL
-    DROP FUNCTION fn_GetAverageStationDowntimeDays;
-GO
-
-CREATE FUNCTION fn_GetAverageStationDowntimeDays (@id_station INT)
-RETURNS DECIMAL(8,2)
-AS
-BEGIN
-    DECLARE @avg_downtime DECIMAL(8,2);
-
-    SELECT @avg_downtime = AVG(CAST(DATEDIFF(MINUTE, [start_date], [end_date]) AS DECIMAL(10,2)) / 1440.0)
-    FROM [maintenance]
-    WHERE [id_station] = @id_station
-      AND [status] = 'resolved'
-      AND [end_date] IS NOT NULL;
-
-    RETURN ISNULL(@avg_downtime, 0.00);
-END;
-GO
-
-SELECT dbo.fn_GetAverageStationDowntimeDays(1) AS avg_downtime_days;
-GO
-
-
--- ----------------------------------------------------------------------------
--- 5. RELATÓRIOS
--- ----------------------------------------------------------------------------
-
--- ============================================================================
--- RELATÓRIO 1: Carregamentos por tipo de conector
--- Lista todos os tipos de conector, o número de carregamentos associados a cada um,
--- inclui conectores sem carregamentos e os ordena do mais para o menos utilizado.
--- ============================================================================
--- Justificação do LEFT JOIN: Utiliza-se LEFT JOIN para garantir que tipos de conector 
--- que ainda não foram utilizados em nenhuma sessão de carregamento continuem a ser 
--- listados no relatório com contagem igual a 0.
-
-SELECT 
-    c.[id_connector],
-    c.[name] AS connector_type,
-    c.[description],
-    COUNT(cs.[id_charge]) AS total_charge_sessions
-FROM [connector] c
-LEFT JOIN [charge_session] cs 
-    ON c.[id_connector] = cs.[id_connector]
-GROUP BY 
-    c.[id_connector], 
-    c.[name], 
-    c.[description]
-ORDER BY 
-    total_charge_sessions DESC;
-GO
-
-
--- ============================================================================
--- RELATÓRIO 2: Postos e número de carregamentos
--- Lista todos os postos e apresenta o número de carregamentos terminados associados.
--- Inclui postos sem carregamentos e ordena de forma decrescente.
--- ============================================================================
--- Justificação do LEFT JOIN: O LEFT JOIN garante que postos recentemente instalados 
--- ou sem registo de carregamentos 'terminated' fiquem visíveis com contagem igual a 0.
 
 SELECT 
     s.[id_station],
     s.[code] AS station_code,
-    COUNT(cs.[id_charge]) AS terminated_charge_sessions
-FROM [station] AS s
-LEFT JOIN [charge_session] AS cs 
-    ON s.[id_station] = cs.[id_station] 
-   AND cs.[status] = 'terminated'
-GROUP BY 
-    s.[id_station], 
-    s.[code]
-ORDER BY 
-    terminated_charge_sessions DESC;
-GO
-
-
--- ============================================================================
--- RELATÓRIO 3: Custo médio por tarifário
--- Relaciona carregamentos e tarifários para calcular o valor médio do custo,
--- considerando apenas carregamentos com o estado 'invoiced'.
--- ============================================================================
--- Justificação do INNER JOIN: Usa-se INNER JOIN porque o cálculo do custo médio exige 
--- estritamente que existam sessões de carregamento faturadas associadas aos tarifários.
-
-SELECT 
-    t.[id_tariff],
-    t.[name] AS tariff_name,
-    t.[version] AS tariff_version,
-    AVG(ii.[charge_amount]) AS average_invoice_cost
-FROM [tariff] t
-INNER JOIN [charge_session] cs 
-    ON t.[id_tariff] = cs.[id_tariff] 
-   AND t.[version] = cs.[version_tariff]
-INNER JOIN [invoice_item] ii 
-    ON cs.[id_charge] = ii.[id_charge_session]
-WHERE 
-    cs.[status] = 'invoiced'
-GROUP BY 
-    t.[id_tariff], 
-    t.[name], 
-    t.[version];
-GO
-
-
--- ============================================================================
--- RELATÓRIO 4: Clientes e número de carregamentos
--- Lista todos os clientes e o número de carregamentos associados. Inclui clientes 
--- sem carregamentos e identifica clientes com mais do que um carregamento (HAVING).
--- ============================================================================
--- Justificação do LEFT JOIN: Permite listar a totalidade da base de clientes, mesmo 
--- aqueles que ainda não realizaram qualquer carregamento.
-
-SELECT 
-    c.[id_client],
-    CONCAT(c.[first_name], ' ', c.[last_name]) AS client_name,
-    c.[type] AS client_type,
-    COUNT(cs.[id_charge]) AS total_charge_sessions
-FROM [client] c
-LEFT JOIN [charge_session] cs 
-    ON c.[id_client] = cs.[id_client]
-GROUP BY 
-    c.[id_client], 
-    c.[first_name], 
-    c.[last_name], 
-    c.[type]
-HAVING 
-    COUNT(cs.[id_charge]) > 1;
-GO
-
-
--- ============================================================================
--- RELATÓRIO 5: Carregamentos e respetivos pagamentos
--- Lista todos os carregamentos, indicando o número de pagamentos registados 
--- por carregamento. Inclui carregamentos sem qualquer pagamento/fatura associada.
--- ============================================================================
--- Justificação do LEFT JOIN: Utilizam-se múltiplos LEFT JOINs encadeados para garantir 
--- que carregamentos em curso, cancelados ou pendentes de faturação apareçam na 
--- listagem com contagem de pagamento igual a 0.
-
-SELECT 
-    cs.[id_charge],
-    cs.[start_date_hour],
-    cs.[status] AS charge_status,
-    COUNT(i.[id_invoice]) AS total_payments_registered
-FROM [charge_session] cs
-LEFT JOIN [invoice_item] ii 
-    ON cs.[id_charge] = ii.[id_charge_session]
-LEFT JOIN [invoice] i 
-    ON ii.[id_invoice] = i.[id_invoice] 
-   AND i.[status] = 'paid'
-GROUP BY 
-    cs.[id_charge], 
-    cs.[start_date_hour], 
-    cs.[status];
-GO
-
-
--- ============================================================================
--- RELATÓRIO 6: Concelhos e valor total faturado
--- Relaciona concelhos, postos, carregamentos e pagamentos para calcular o valor 
--- total faturado por concelho. Filtra por concelhos com total faturado > 10.00.
--- ============================================================================
--- Justificação do LEFT JOIN: Utiliza-se LEFT JOIN a partir de concelho para permitir 
--- a agregação financeira completa e prevenir perda de dados de postos sem faturas.
-
-SELECT 
-    m.[id_municipality],
-    m.[name] AS municipality_name,
-    ISNULL(SUM(ii.[charge_amount]), 0.00) AS total_invoiced_amount
-FROM [municipality] m
-LEFT JOIN [station] s 
-    ON m.[id_municipality] = s.[id_municipality]
-LEFT JOIN [charge_session] cs 
-    ON s.[id_station] = cs.[id_station]
-LEFT JOIN [invoice_item] ii 
-    ON cs.[id_charge] = ii.[id_charge_session]
-GROUP BY 
-    m.[id_municipality], 
-    m.[name]
-HAVING 
-    ISNULL(SUM(ii.[charge_amount]), 0.00) > 10.00;
-GO
-
-
--- ============================================================================
--- RELATÓRIO 7: Postos e existência de manutenções
--- Lista todos os postos, indicando o número de ocorrências associadas a cada um.
--- Inclui postos sem ocorrências e ordena para identificar o Top 10 com mais manutenções.
--- ============================================================================
--- Justificação do LEFT JOIN: Permite incluir todos os postos da rede na listagem,
--- garantindo que postos sem histórico de manutenção não fiquem de fora do relatório.
-
-SELECT TOP 10
-    s.[id_station],
-    s.[code] AS station_code,
-    COUNT(m.[id_maintenance]) AS total_maintenances
-FROM [station] s
-LEFT JOIN [maintenance] m 
-    ON s.[id_station] = m.[id_station]
-GROUP BY 
-    s.[id_station], 
-    s.[code]
-ORDER BY 
-    total_maintenances DESC;
-GO
-
-
--- Relatório Estratégico: Taxa de Ineficiência e Expiração de Reservas por Posto
-
-SELECT 
-    s.[id_station],
-    s.[code] AS station_code,
-    COUNT(r.[id_reservation]) AS total_reservations,
-    SUM(CASE WHEN r.[status] = 'expired' THEN 1 ELSE 0 END) AS expired_reservations,
+    s.[registration_date],
+    s.[cessation_date],
+    
     CAST(
-        (SUM(CASE WHEN r.[status] = 'expired' THEN 1.0 ELSE 0 END) / COUNT(r.[id_reservation])) * 100 
-        AS DECIMAL(5,2)
-    ) AS no_show_rate_percentage
+        CASE 
+            WHEN DATEDIFF(MINUTE, s.[registration_date], ISNULL(s.[cessation_date], GETDATE())) <= 0 THEN 0.00
+            ELSE (ISNULL(m_tot.[total_maintenance_minutes], 0.00) / 
+                  CAST(DATEDIFF(MINUTE, s.[registration_date], ISNULL(s.[cessation_date], GETDATE())) AS DECIMAL(12,2))) * 100.00
+        END AS DECIMAL(5,2)
+    ) AS maintenance_percentage
+
+FROM [station] AS s
+OUTER APPLY (
+    SELECT SUM(CAST(DATEDIFF(MINUTE, m.[start_date], m.[end_date]) AS DECIMAL(12,2))) AS total_maintenance_minutes
+    FROM [maintenance] AS m
+    WHERE m.[id_station] = s.[id_station]
+      AND m.[status] = 'resolved'
+      AND m.[end_date] IS NOT NULL
+) m_tot;
+GO
+
+
+-- ----------------------------------------------------------------------------
+-- 4.6. FUNCTION
+-- Objetivo: Calcular a duração média de manutenção por posto (em horas). Retorna 
+-- uma lista com todos os postos no sistema (mesmo os que nunca tiveram manutenções),
+-- a respetiva duração média das manutenções e uma linha final com a média geral de 
+-- toda a rede.
+-- ----------------------------------------------------------------------------
+
+SELECT 
+    CAST(s.[id_station] AS VARCHAR(20)) AS id_station,
+    s.[code] AS station_code,
+    COALESCE(CAST(AVG(CAST(DATEDIFF(MINUTE, m.[start_date], m.[end_date]) AS DECIMAL(10,2)) / 60.0) AS DECIMAL(10,2)), 0.00) AS avg_duration_hours
 FROM [station] s
-INNER JOIN [reservation] r 
-    ON s.[id_station] = r.[id_station]
-GROUP BY 
-    s.[id_station], 
-    s.[code]
-ORDER BY 
-    no_show_rate_percentage DESC;
+LEFT JOIN [maintenance] m ON s.[id_station] = m.[id_station] 
+    AND m.[status] = 'resolved' 
+    AND m.[end_date] IS NOT NULL
+GROUP BY s.[id_station], s.[code]
+
+UNION ALL
+
+SELECT 
+    'MÉDIA GERAL' AS id_station,
+    'TODOS OS POSTOS' AS station_code,
+    CAST(AVG(CAST(DATEDIFF(MINUTE, m.[start_date], m.[end_date]) AS DECIMAL(10,2)) / 60.0) AS DECIMAL(10,2)) AS avg_duration_hours
+FROM [maintenance] m
+WHERE m.[status] = 'resolved'
+  AND m.[end_date] IS NOT NULL;
+GO

@@ -1,19 +1,11 @@
+function countMaintenanceStations (stations, status) {
 
-        "Almodôvar",
-        "Alvito",
-        "Barrancos",
-        "Beja",
-        "Castro Verde",
-        "Cuba",
-        "Ferreira do Alentejo",
-        "Mértola",
-        "Moura",
-        "Odemira",
-        "Ourique",
-        "Serpa",
-        "Vidigueira"
-    ],
+    if (!station) return 0;
 
-    "Braga": [
-        "Amares",
-        "Barcelos",
+    const reportStations = stations.filter(s => normalizeValue(s.status) === normalizeValue(status));
+
+    return reportStations.length
+};
+
+const a = countMaintenanceStations(stations, "under maintenace");
+console.log(a)

@@ -6,6 +6,7 @@ const { getClients, saveClientsState } = require('./clients');
 const { getTariffs } = require('./tariffs');
 const {
     normalizeCode,
+    normalizeValue,
     getValidValue,
     getNextId,
     validateDate
@@ -273,7 +274,11 @@ function showChargeMenu() {
     } while (option !== "0");
 }
 
+
+
+
 module.exports = {
     getCharges,
     showChargeMenu
 };
+

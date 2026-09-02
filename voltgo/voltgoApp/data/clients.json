@@ -19,6 +19,17 @@
     "phoneNumber": "+351915439865",
     "licenceCountry": "Portugal",
     "licencePlate": "GH-45-AC",
+    "points": 46
+  },
+  {
+    "id": 4,
+    "tif": "252939877",
+    "firstName": "Silvia",
+    "lastName": "Vilsa",
+    "dob": "2001-05-26",
+    "phoneNumber": "+351916674590",
+    "licenceCountry": "Portugal",
+    "licencePlate": "14-PP-96",
     "points": 0
   }
 ]
