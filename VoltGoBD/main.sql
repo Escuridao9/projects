@@ -583,9 +583,10 @@ SELECT
     s.[code] AS station_code,
 
     COUNT(cs.[id_charge]) AS total_sessions,
+    SUM(CASE WHEN cs.[status] = 'in progress' THEN 1 ELSE 0 END) AS in_progress_sessions,
     SUM(CASE WHEN cs.[status] = 'terminated' THEN 1 ELSE 0 END) AS terminated_sessions,
-    SUM(CASE WHEN cs.[status] = 'in process' THEN 1 ELSE 0 END) AS in_process_sessions,
-    SUM(CASE WHEN cs.[status] = 'open' THEN 1 ELSE 0 END) AS open_sessions
+    SUM(CASE WHEN cs.[status] = 'invoiced' THEN 1 ELSE 0 END) AS invoiced_sessions,
+    SUM(CASE WHEN cs.[status] = 'cancelled' THEN 1 ELSE 0 END) AS cancelled_sessions
 
 FROM [station] AS s
 LEFT JOIN [charge_session] AS cs 
@@ -594,7 +595,6 @@ GROUP BY
     s.[id_station], 
     s.[code]
 GO
-
 -- ----------------------------------------------------------------------------
 -- 4.2. TRIGGER
 -- Objetivo: Atribuir automaticamente pontos de fidelização ao cliente assim que 
@@ -789,11 +789,11 @@ BEGIN
         THROW @severity, @message, @state
         END;
 
-        -- ver se existem charge_session associada aos conectores desta estação
+        -- ver se existem charge_session associadas aos conectores desta estação
         IF EXISTS (
             SELECT cs.[id_station], cs.[id_connector] 
             FROM [charge_session]  AS cs
-            JOIN [station_connector] AS sc ON cs.[id_station] = sc.[id_station] AND cs.[id_connector] = sc.[id_connector]
+            INNER JOIN [station_connector] AS sc ON cs.[id_station] = sc.[id_station] AND cs.[id_connector] = sc.[id_connector]
             WHERE sc.[id_station] = @id_station
         )
         BEGIN
@@ -1034,8 +1034,8 @@ SELECT
     CAST(s.[id_station] AS VARCHAR(20)) AS id_station,
     s.[code] AS station_code,
     COALESCE(CAST(AVG(CAST(DATEDIFF(MINUTE, m.[start_date], m.[end_date]) AS DECIMAL(10,2)) / 60.0) AS DECIMAL(10,2)), 0.00) AS avg_duration_hours
-FROM [station] s
-LEFT JOIN [maintenance] m ON s.[id_station] = m.[id_station] 
+FROM [station] AS s
+LEFT JOIN [maintenance] AS m ON s.[id_station] = m.[id_station] 
     AND m.[status] = 'resolved' 
     AND m.[end_date] IS NOT NULL
 GROUP BY s.[id_station], s.[code]

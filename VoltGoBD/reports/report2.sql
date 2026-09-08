@@ -23,9 +23,6 @@ ORDER BY
     terminated_charge_sessions DESC;
 GO
 
-USE bd_test;
-GO
-
 
 -- ----------------------------------------------------------------------------
 -- RELATÓRIO 2

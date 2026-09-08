@@ -6,8 +6,11 @@
 -- que ainda não foram utilizados em nenhuma sessão de carregamento continuem a ser 
 -- listados no relatório com contagem igual a 0.
 
+USE bd_test
+GO
+
 SELECT 
-    c.[id_connector],
+    c.[id_connector] 
     c.[name] AS connector_type,
     c.[description],
     COUNT(cs.[id_charge]) AS total_charge_sessions

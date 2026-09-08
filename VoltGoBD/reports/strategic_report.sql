@@ -1,5 +1,5 @@
 -- ============================================================================
--- RELATÓRIO ESTRATÉGICO: Taxa de Ineficiência e Expiração de Reservas por PostO
+-- RELATÓRIO ESTRATÉGICO: Taxa de Ineficiência e Expiração de Reservas por Posto
 -- ============================================================================
 
 SELECT 
